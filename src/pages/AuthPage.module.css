@@ -1,0 +1,120 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: var(--bg);
+}
+
+.box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 400px;
+}
+
+.wordmark {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: -0.03em;
+  margin-bottom: 4px;
+}
+
+.sub {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-bottom: 1.75rem;
+}
+
+.form { display: flex; flex-direction: column; }
+
+.error {
+  font-size: 0.8rem;
+  color: var(--danger);
+  background: var(--danger-dim);
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.5rem;
+}
+
+.toggle {
+  margin-top: 1.25rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.toggle button {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0;
+  font-family: var(--font-body);
+}
+.toggle button:hover { color: var(--accent-hover); }
+
+.inputWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.inputWrap input {
+  padding-right: 2.5rem;
+}
+
+.eyeBtn {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s;
+}
+.eyeBtn:hover { color: var(--text-muted); }
+
+.checklist {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin: -4px 0 12px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.checkItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+}
+
+.checkDot {
+  font-size: 0.7rem;
+  width: 14px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.checkPassed { color: var(--success); }
+.checkFailed { color: var(--text-dim); }
+
+.fieldError {
+  font-size: 0.78rem;
+  color: var(--danger);
+  margin-top: 4px;
+}
