@@ -264,3 +264,59 @@
   padding-top: 0.6rem;
   border-top: 1px solid var(--border);
 }
+
+/* ── Milestones ── */
+.milestones {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-top: 1.25rem;
+  padding-top: 0.5rem;
+}
+.milestoneLine {
+  position: absolute;
+  top: 18px;
+  left: 14px; right: 14px;
+  height: 2px;
+  background: var(--border);
+  z-index: 0;
+}
+.milestone {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 4px;
+  z-index: 1; flex: 1;
+}
+.milestoneDot {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.65rem; font-weight: 700; color: #fff;
+  background: var(--surface-3);
+  transition: background 0.3s, border-color 0.3s;
+}
+.milestoneReached .milestoneDot {
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+}
+.milestoneLabel {
+  font-size: 0.7rem; font-weight: 700;
+  transition: color 0.3s;
+}
+.milestoneAmt {
+  font-size: 0.62rem;
+  text-align: center;
+}
+
+/* ── XP Earned ── */
+.xpEarned {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  margin-top: 1rem;
+  padding: 0.6rem 0.85rem;
+  background: var(--gold-dim);
+  border: 1px solid rgba(240,168,68,0.2);
+  border-radius: var(--radius-sm);
+}
+.xpEarnedLabel { font-size: 0.75rem; color: var(--text-muted); }
+.xpEarnedVal { font-size: 0.85rem; font-weight: 700; }

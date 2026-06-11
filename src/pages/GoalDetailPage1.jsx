@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useGoals } from '../hooks/useGoals'
@@ -119,29 +119,6 @@ function CalendarView({ goal, color }) {
   )
 }
 
-// ── Celebration Popup ─────────────────────────────────────────────────────────
-function CelebrationPopup({ message, sub, onClose }) {
-  useEffect(() => {
-    const t = setTimeout(onClose, 4000)
-    return () => clearTimeout(t)
-  }, [onClose])
-
-  return (
-    <div style={{
-      position: 'fixed', top: '24px', left: '50%', transform: 'translateX(-50%)',
-      zIndex: 999, background: 'linear-gradient(135deg, #7c6af7, #4ab8f5)',
-      color: '#fff', borderRadius: '16px', padding: '1.25rem 2rem',
-      boxShadow: '0 8px 32px rgba(124,106,247,0.5)',
-      textAlign: 'center', animation: 'fadeInUp 0.4s ease',
-      minWidth: '280px', maxWidth: '90vw',
-    }}>
-      <div style={{ fontSize: '2.5rem', marginBottom: '6px' }}>🎉</div>
-      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1.15rem' }}>{message}</div>
-      <div style={{ fontSize: '0.82rem', opacity: 0.88, marginTop: '5px' }}>{sub}</div>
-    </div>
-  )
-}
-
 // ── Main page ────────────────────────────────────────────────────────────────
 export default function GoalDetailPage() {
   const { goalId } = useParams()
@@ -157,7 +134,6 @@ export default function GoalDetailPage() {
   const [entryDate, setEntryDate] = useState(new Date().toISOString().split('T')[0])
   const [logging, setLogging] = useState(false)
   const [showCalendar, setShowCalendar] = useState(false)
-  const [celebration, setCelebration] = useState(null)
 
   const [editing, setEditing] = useState(false)
   const [editTitle, setEditTitle] = useState('')
@@ -248,22 +224,11 @@ export default function GoalDetailPage() {
     if (isNumeric) {
       const a = Number(amount)
       if (!a || a <= 0) { setLogging(false); return }
-      const newTotal = currentAmount + a
-      const newPct = Math.min(100, Math.round((newTotal / targetAmount) * 100))
       await logEntry(goalId, {
         amount: a,
         note: note.trim(),
         date: new Date(entryDate + 'T12:00:00').toISOString(),
       })
-      if (pct < 100 && newPct >= 100) {
-        setCelebration({ message: 'Goal Complete! 🏁', sub: 'You crushed it. Well done.' })
-      } else if (newPct >= 75 && pct < 75) {
-        setCelebration({ message: '75% There!', sub: 'Almost at the finish line.' })
-      } else if (newPct >= 50 && pct < 50) {
-        setCelebration({ message: 'Halfway There! ⚡', sub: 'Keep the momentum going.' })
-      } else if (newPct >= 25 && pct < 25) {
-        setCelebration({ message: 'First Quarter Done!', sub: 'Great start, keep going.' })
-      }
       setAmount('')
     } else {
       const p = Number(milestoneProgress)
@@ -321,13 +286,6 @@ export default function GoalDetailPage() {
 
   return (
     <div className={styles.page}>
-      {celebration && (
-        <CelebrationPopup
-          message={celebration.message}
-          sub={celebration.sub}
-          onClose={() => setCelebration(null)}
-        />
-      )}
       <button className="btn btn-ghost" style={{ marginBottom: '1.25rem', fontSize: '0.8rem' }} onClick={() => navigate('/')}>
         ← Back to goals
       </button>

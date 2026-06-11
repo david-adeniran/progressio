@@ -1,3 +1,4 @@
+import { Trash2 } from 'lucide-react'
 import styles from './GoalCard.module.css'
 
 function ProgressRing({ pct, color, size = 56 }) {
@@ -80,7 +81,7 @@ export default function GoalCard({ goal, color, onClick, onDelete }) {
       <div className={styles.footer}>
         <span className={styles.logs}>{(goal.logs || []).length} update{(goal.logs || []).length !== 1 ? 's' : ''}</span>
         <button className={styles.del} onClick={handleDelete} title="Delete goal">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          <Trash2 size={14} />
         </button>
       </div>
     </div>

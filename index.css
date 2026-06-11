@@ -30,23 +30,6 @@
   --radius-xl: 24px;
 }
 
-[data-theme="light"] {
-  --bg: #f4f4f8;
-  --surface: #ffffff;
-  --surface-2: #f0f0f5;
-  --surface-3: #e4e4ec;
-  --border: #dcdce8;
-  --border-light: #c8c8d8;
-  --text: #0a0a0f;
-  --text-muted: #5a5a6e;
-  --text-dim: #9a9aaa;
-  --accent-dim: #e8e4ff;
-  --success-dim: #d0f5e8;
-  --gold-dim: #fef3dc;
-  --blue-dim: #ddf1fd;
-  --danger-dim: #fde8e8;
-}
-
 html { font-size: 16px; }
 
 body {
@@ -55,20 +38,6 @@ body {
   font-family: var(--font-body);
   line-height: 1.6;
   min-height: 100vh;
-  position: relative;
-}
-
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image:
-    radial-gradient(ellipse at 15% 50%, rgba(124, 106, 247, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 85% 15%, rgba(74, 184, 245, 0.07) 0%, transparent 50%),
-    radial-gradient(ellipse at 55% 85%, rgba(62, 207, 142, 0.05) 0%, transparent 50%);
-  animation: bgBreath 8s ease-in-out infinite alternate;
-  pointer-events: none;
-  z-index: 0;
 }
 
 a { color: var(--accent); text-decoration: none; }
@@ -118,10 +87,6 @@ textarea { resize: vertical; min-height: 80px; }
 .form-group label { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; letter-spacing: 0.02em; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 
-@keyframes bgBreath {
-  from { opacity: 0.5; transform: scale(1); }
-  to { opacity: 1; transform: scale(1.08); }
-}
 @keyframes xpPulse {
   0% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.15); opacity: 0.8; }
