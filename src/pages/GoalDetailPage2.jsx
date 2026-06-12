@@ -190,11 +190,6 @@ export default function GoalDetailPage() {
   const startDate = goal.startDate ? new Date(goal.startDate + 'T00:00:00') : null
   const deadline = goal.deadline ? new Date(goal.deadline + 'T00:00:00') : null
   const daysLeft = deadline ? Math.ceil((deadline - Date.now()) / 86400000) : null
-  const timeLeft = daysLeft === null ? null
-    : frequency === 'Weekly' ? Math.ceil(daysLeft / 7)
-    : frequency === 'Monthly' ? Math.ceil(daysLeft / 30)
-    : daysLeft
-  const timeUnit = frequency === 'Weekly' ? 'wk' : frequency === 'Monthly' ? 'mo' : 'd'
 
   // Enforce frequency constraints on entry date
   function isDateAllowed(dateStr) {
@@ -444,7 +439,7 @@ export default function GoalDetailPage() {
               )}
               {deadline && daysLeft !== null && (
                 <span style={{ fontSize: '0.8rem', color: daysLeft < 7 && pct < 100 ? 'var(--danger)' : 'var(--text-muted)' }}>
-                  {pct >= 100 ? '✓ Completed' : daysLeft < 0 ? 'Overdue' : daysLeft === 0 ? 'Due today' : `${timeLeft}${timeUnit} left`}
+                  {pct >= 100 ? '✓ Completed' : daysLeft < 0 ? 'Overdue' : daysLeft === 0 ? 'Due today' : `${daysLeft}d left`}
                 </span>
               )}
             </div>

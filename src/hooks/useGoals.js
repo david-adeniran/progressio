@@ -55,6 +55,7 @@ export function useGoals(userId) {
   async function logEntry(goalId, { amount, note, date }) {
     const goal = goals.find((g) => g.id === goalId);
     if (!goal) return;
+    if (goal.progress >= 100) return; // No XP for completed goals
 
     const entryAmount = Number(amount) || 0;
     const newTotal = (goal.currentAmount || 0) + entryAmount;

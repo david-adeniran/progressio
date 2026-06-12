@@ -54,10 +54,10 @@ export default function Layout() {
       {/* Sidebar */}
       <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ""}`}>
         {/* Logo */}
-        <Link to="/" className={styles.sidebarLogo}>
+        <div className={styles.sidebarLogo}>
           <div className={styles.logoIcon}>P</div>
           <span className={styles.logoText}>Progressio</span>
-        </Link>
+        </div>
 
         {/* Nav */}
         <nav className={styles.nav}>
@@ -122,7 +122,7 @@ export default function Layout() {
           <button className={styles.menuBtn} onClick={() => setSidebarOpen(v => !v)}>
             {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
-          <Link to="/" className={styles.topbarLogo}>Progressio</Link>
+          <span className={styles.topbarLogo}>Progressio</span>
           <div style={{ width: 36 }} />
         </div>
 

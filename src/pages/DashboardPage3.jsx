@@ -13,7 +13,7 @@ import {
   Wallet, Dumbbell, BookOpen, Briefcase, Heart, Plane,
   Leaf, Zap, Trophy, Flame, Plus, Target, LayoutGrid,
   Rocket, Globe, CheckCircle, Pencil, Lock, Star,
-  TrendingUp, AlertTriangle, CheckSquare, Sparkles,
+  TrendingUp, AlertTriangle, CheckSquare,
 } from "lucide-react";
 
 const CATEGORY_COLORS = {
@@ -80,7 +80,7 @@ function MotivationalBanner({ name, goals, streak }) {
   let message = "Your journey starts with a single goal. Add one now.";
   let sub = "Small consistent actions lead to extraordinary results.";
   if (total > 0 && streak > 0) {
-    message = `Keep crushing it, ${name}! ${streak}-day streak going strong.`;
+    message = `Keep crushing it, ${name}! 🔥 ${streak}-day streak going strong.`;
     sub = "Small consistent actions lead to extraordinary results. You're doing great!";
   } else if (completed > 0) {
     message = `You've completed ${completed} goal${completed > 1 ? 's' : ''}. Keep the momentum!`;
@@ -91,7 +91,7 @@ function MotivationalBanner({ name, goals, streak }) {
   }
   return (
     <div className={styles.banner}>
-      <div className={styles.bannerIcon}><Sparkles size={22} color="var(--accent)" /></div>
+      <div className={styles.bannerIcon}>✨</div>
       <div>
         <div className={styles.bannerMsg}>{message}</div>
         <div className={styles.bannerSub}>{sub}</div>
@@ -183,9 +183,7 @@ export default function DashboardPage() {
             </div>
             <div className={styles.ccStatVal}>{streak}</div>
             <div className={styles.ccStatLabel}>Day Streak</div>
-            <div className={styles.ccStatSub} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <Flame size={11} color="var(--danger)" /> Best: {streak} days
-            </div>
+            <div className={styles.ccStatSub}>🔥 Best: {streak} days</div>
           </div>
           <div className={styles.ccStat}>
             <div className={styles.ccStatIcon} style={{ background: "rgba(124,106,247,0.15)" }}>
@@ -193,9 +191,7 @@ export default function DashboardPage() {
             </div>
             <div className={styles.ccStatVal}>{completedGoals.length}</div>
             <div className={styles.ccStatLabel}>Goals Completed</div>
-            <div className={styles.ccStatSub} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <CheckCircle size={11} color="var(--success)" /> Keep it up!
-            </div>
+            <div className={styles.ccStatSub}>🎯 Keep it up!</div>
           </div>
           <div className={styles.ccStat}>
             <div className={styles.ccStatIcon} style={{ background: "rgba(240,168,68,0.15)" }}>
@@ -203,7 +199,7 @@ export default function DashboardPage() {
             </div>
             <div className={styles.ccStatVal}>{unlockedAchievements.length}</div>
             <div className={styles.ccStatLabel}>Achievements</div>
-            <div className={styles.ccStatSub} style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Trophy size={11} color="var(--gold)" /> {ACHIEVEMENTS.length - unlockedAchievements.length} to unlock</div>
+            <div className={styles.ccStatSub}>🏆 {ACHIEVEMENTS.length - unlockedAchievements.length} to unlock</div>
           </div>
           <div className={styles.ccStat}>
             <div className={styles.ccStatIcon} style={{ background: "rgba(74,184,245,0.15)" }}>
@@ -211,7 +207,7 @@ export default function DashboardPage() {
             </div>
             <div className={styles.ccStatVal}>{completionRate}%</div>
             <div className={styles.ccStatLabel}>Completion Rate</div>
-            <div className={styles.ccStatSub} style={{ display: 'flex', alignItems: 'center', gap: 4 }}><TrendingUp size={11} color="var(--blue)" /> +{completionRate > 0 ? completionRate : 0}% this month</div>
+            <div className={styles.ccStatSub}>📈 +{completionRate > 0 ? completionRate : 0}% this month</div>
           </div>
         </div>
       </div>
@@ -232,6 +228,8 @@ export default function DashboardPage() {
                   ? Math.round(catGoals.reduce((s, g) => s + (g.progress || 0), 0) / catGoals.length) : 0;
                 const catLevel = getCategoryLevel(goals, cat);
                 const color = CATEGORY_COLORS[cat];
+                const r = 20, circ = 2 * Math.PI * r;
+                const dash = (avg / 100) * circ;
                 const active = filter === cat;
                 return (
                   <div
@@ -247,11 +245,10 @@ export default function DashboardPage() {
                       <span className={styles.catName}>{cat}</span>
                       {/* Mini ring */}
                       <div className={styles.catRing}>
-                        <svg width="48" height="48" viewBox="0 0 48 48" style={{ overflow: 'visible' }}>
-                          <circle cx="24" cy="24" r={16} fill="none" stroke="var(--surface-3)" strokeWidth="3" />
-                          <circle cx="24" cy="24" r={16} fill="none" stroke={color} strokeWidth="3"
-                            strokeDasharray={`${(avg / 100) * 2 * Math.PI * 16} ${2 * Math.PI * 16}`}
-                            strokeLinecap="round" transform="rotate(-90 24 24)" />
+                        <svg width="48" height="48" viewBox="0 0 48 48">
+                          <circle cx="24" cy="24" r={r} fill="none" stroke="var(--surface-3)" strokeWidth="3.5" />
+                          <circle cx="24" cy="24" r={r} fill="none" stroke={color} strokeWidth="3.5"
+                            strokeDasharray={`${dash} ${circ}`} strokeLinecap="round" transform="rotate(-90 24 24)" />
                         </svg>
                         <span className={styles.catPct} style={{ color }}>{avg}%</span>
                       </div>
@@ -338,6 +335,7 @@ export default function DashboardPage() {
           <MotivationalBanner name={name} goals={goals} streak={streak} />
         </div>
 
+        {/* ── Right Panel: Achievements ── */}
         <div className={styles.rightPanel}>
           <div className={styles.section}>
             <div className={styles.sectionHead}>
@@ -360,9 +358,8 @@ export default function DashboardPage() {
                 );
               })}
             </div>
-            <button className="btn btn-ghost" onClick={() => navigate("/achievements")}
-              style={{ width: "100%", marginTop: "0.85rem", justifyContent: "center", fontSize: "0.82rem" }}>
-              <Trophy size={14} /> See all · {unlockedAchievements.length}/{ACHIEVEMENTS.length} unlocked
+            <button className="btn btn-ghost" onClick={() => navigate("/achievements")} style={{ width: "100%", marginTop: "0.85rem", justifyContent: "center", fontSize: "0.82rem" }}>
+              <Trophy size={14} /> See all {ACHIEVEMENTS.length} achievements · {unlockedAchievements.length} unlocked
             </button>
           </div>
         </div>

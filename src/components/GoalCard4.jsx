@@ -13,11 +13,6 @@ export default function GoalCard({ goal, color, onClick, onDelete }) {
   const startDate = goal.startDate ? new Date(goal.startDate + 'T00:00:00') : null
   const deadline = goal.deadline ? new Date(goal.deadline + 'T00:00:00') : null
   const daysLeft = deadline ? Math.ceil((deadline - Date.now()) / 86400000) : null
-  const timeLeft = daysLeft === null ? null
-    : goal.frequency === 'Weekly' ? Math.ceil(daysLeft / 7)
-    : goal.frequency === 'Monthly' ? Math.ceil(daysLeft / 30)
-    : daysLeft
-  const timeUnit = goal.frequency === 'Weekly' ? 'wk' : goal.frequency === 'Monthly' ? 'mo' : 'd'
 
   const dateStr = startDate && deadline
     ? `${startDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} → ${deadline.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`
@@ -93,7 +88,7 @@ export default function GoalCard({ goal, color, onClick, onDelete }) {
             : daysLeft === null ? dateStr
             : daysLeft < 0 ? `Overdue · ${dateStr}`
             : daysLeft === 0 ? `Due today · ${dateStr}`
-            : `${timeLeft}${timeUnit} left · ${dateStr}`}
+            : `${daysLeft}d left · ${dateStr}`}
         </p>
       )}
 
