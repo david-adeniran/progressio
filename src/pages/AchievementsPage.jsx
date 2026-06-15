@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useGoals } from '../hooks/useGoals'
-import { calcTotalXP, getLevelInfo, getUnlockedAchievements, ACHIEVEMENTS } from '../lib/xp'
-import { Target, Pencil, CheckCircle, Rocket, Globe, Flame, Zap, Star, Trophy, Lock } from 'lucide-react'
+import { calcTotalXP, getLevelInfo, ACHIEVEMENTS } from '../lib/xp'
+import { Target, Pencil, CheckCircle, Rocket, Globe, Flame, Zap, Star, Trophy, Lock, RotateCcw, AlertTriangle } from 'lucide-react'
 import styles from './AchievementsPage.module.css'
 
 const ICONS = {
@@ -30,22 +30,25 @@ const ROADMAP_LEVELS = [
 
 export default function AchievementsPage() {
   const { user } = useAuth()
-  const { goals } = useGoals(user?.uid)
+  const { goals, getUnlockedAchievements, resetAchievements, persistedAchievements } = useGoals(user?.uid)
   const totalXP = calcTotalXP(goals)
   const { level } = getLevelInfo(totalXP)
-  const unlocked = getUnlockedAchievements(goals, totalXP)
-  const unlockedIds = new Set(unlocked.map(a => a.id))
   const [filter, setFilter] = useState('all')
+  const [showResetConfirm, setShowResetConfirm] = useState(false)
+  const [resetting, setResetting] = useState(false)
+
+  // Use persisted achievements merged with current goal state
+  const unlockedSet = getUnlockedAchievements()
+  const unlocked = ACHIEVEMENTS.filter(a => unlockedSet.has(a.id))
+  const unlockedIds = unlockedSet
 
   const pct = Math.round((unlocked.length / ACHIEVEMENTS.length) * 100)
 
-  // Featured = most recently unlocked, or highest tier unlocked
   const featured = useMemo(() => {
     const tierRank = { legendary: 0, epic: 1, hidden: 2, rare: 3, common: 4 }
     return [...unlocked].sort((a, b) => tierRank[a.tier] - tierRank[b.tier])[0] || null
   }, [unlocked])
 
-  // Filtered list
   const filtered = useMemo(() => {
     if (filter === 'all') return ACHIEVEMENTS
     if (filter === 'unlocked') return ACHIEVEMENTS.filter(a => unlockedIds.has(a.id))
@@ -53,13 +56,17 @@ export default function AchievementsPage() {
     return ACHIEVEMENTS.filter(a => a.tier === filter)
   }, [filter, unlockedIds])
 
-  // Stats
   const rarestUnlocked = useMemo(() => {
     const tierRank = { legendary: 0, epic: 1, hidden: 2, rare: 3, common: 4 }
     return [...unlocked].sort((a, b) => tierRank[a.tier] - tierRank[b.tier])[0]
   }, [unlocked])
 
-  const longestStreakAch = unlocked.filter(a => a.id.startsWith('streak_')).pop()
+  async function handleReset() {
+    setResetting(true)
+    await resetAchievements()
+    setResetting(false)
+    setShowResetConfirm(false)
+  }
 
   function filterTabClass(val) {
     const isTier = TIER_ORDER.includes(val)
@@ -72,12 +79,55 @@ export default function AchievementsPage() {
   return (
     <div className={styles.page}>
 
+      {/* Reset confirm modal */}
+      {showResetConfirm && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)',
+          zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          backdropFilter: 'blur(4px)',
+        }}>
+          <div style={{
+            background: 'var(--surface)', border: '1px solid var(--border)',
+            borderRadius: '18px', padding: '2rem', maxWidth: '380px', width: '90%',
+            textAlign: 'center', boxShadow: '0 24px 48px rgba(0,0,0,0.4)',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>
+              <AlertTriangle size={40} color="var(--danger)" />
+            </div>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.15rem', fontWeight: 700, color: 'var(--text)', marginBottom: '0.5rem' }}>
+              Reset all achievements?
+            </h2>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '1.5rem' }}>
+              This will permanently erase all your unlocked achievements. This action cannot be undone.
+            </p>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button className="btn btn-ghost" onClick={() => setShowResetConfirm(false)}>Cancel</button>
+              <button
+                className="btn"
+                style={{ background: 'var(--danger)', color: '#fff' }}
+                onClick={handleReset}
+                disabled={resetting}
+              >
+                {resetting ? 'Resetting…' : 'Yes, reset everything'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Achievements</h1>
           <p className={styles.sub}>Celebrate milestones and track your journey toward mastery.</p>
         </div>
+        <button
+          className="btn btn-ghost"
+          style={{ fontSize: '0.8rem', color: 'var(--danger)', borderColor: 'var(--danger)', display: 'flex', alignItems: 'center', gap: '6px' }}
+          onClick={() => setShowResetConfirm(true)}
+        >
+          <RotateCcw size={13} /> Reset achievements
+        </button>
       </div>
 
       {/* Top progress bar */}
@@ -94,7 +144,7 @@ export default function AchievementsPage() {
         <div>
           {/* Hero */}
           <div className={styles.hero}>
-            <div className={styles.heroTag}>🏆 Current Featured Achievement</div>
+            <div className={styles.heroTag}><Trophy size={13} color="var(--gold)" /> Current Featured Achievement</div>
             {featured ? (
               <div className={styles.heroBody}>
                 <div className={styles.heroHexWrap}>
@@ -106,7 +156,7 @@ export default function AchievementsPage() {
                 <div className={styles.heroInfo}>
                   <div className={styles.heroName}>{featured.label}</div>
                   <div className={styles.heroDesc}>{featured.revealedDesc || featured.desc}</div>
-                  <div className={styles.heroXP}>⚡ +{TIER_META[featured.tier].xp} XP</div>
+                  <div className={styles.heroXP}><Zap size={12} /> +{TIER_META[featured.tier].xp} XP</div>
                 </div>
               </div>
             ) : (
@@ -172,7 +222,7 @@ export default function AchievementsPage() {
                       {isHidden ? '???' : a.label}
                     </h3>
                     <p className={styles.badgeDesc}>
-                      {isHidden ? '🔒 Secret achievement' : (isUnlocked ? (a.revealedDesc || a.desc) : a.desc)}
+                      {isHidden ? <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}><Lock size={10} /> Secret achievement</span> : (isUnlocked ? (a.revealedDesc || a.desc) : a.desc)}
                     </p>
                     {isUnlocked && <span className={styles.badgeCheck}>✓ Earned</span>}
                   </div>
@@ -210,8 +260,6 @@ export default function AchievementsPage() {
 
         {/* Right panel */}
         <div className={styles.rightPanel}>
-
-          {/* Stats */}
           <div className={styles.panel}>
             <div className={styles.panelTitle}>Achievement Statistics</div>
             {[
@@ -219,7 +267,6 @@ export default function AchievementsPage() {
               { label: 'Locked', val: ACHIEVEMENTS.length - unlocked.length },
               { label: 'Total XP Earned', val: totalXP.toLocaleString() },
               { label: 'Rarest Achievement', val: rarestUnlocked ? rarestUnlocked.label : '—' },
-              { label: 'Current Streak', val: longestStreakAch ? longestStreakAch.label : '—' },
             ].map(row => (
               <div key={row.label} className={styles.statRow}>
                 <span className={styles.statRowLabel}>{row.label}</span>
@@ -228,7 +275,6 @@ export default function AchievementsPage() {
             ))}
           </div>
 
-          {/* Rarity legend */}
           <div className={styles.panel}>
             <div className={styles.panelTitle}>Rarity Legend</div>
             {TIER_ORDER.filter(t => t !== 'hidden').map(tier => (
@@ -241,7 +287,6 @@ export default function AchievementsPage() {
             ))}
           </div>
 
-          {/* Recent unlocks */}
           {unlocked.length > 0 && (
             <div className={styles.panel}>
               <div className={styles.panelTitle}>Recent Unlocks</div>
@@ -263,7 +308,6 @@ export default function AchievementsPage() {
               })}
             </div>
           )}
-
         </div>
       </div>
     </div>

@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useGoals } from '../hooks/useGoals'
 import AddGoalModal from '../components/AddGoalModal'
@@ -265,20 +265,26 @@ export default function GoalsPage() {
   const [showAdd, setShowAdd] = useState(false)
   const [tab, setTab] = useState('All')
   const [sort, setSort] = useState('newest')
-  const [category, setCategory] = useState('All')
+  const [searchParams] = useSearchParams()
+  const [category, setCategory] = useState(searchParams.get('category') || 'All')
   const [selectedGoal, setSelectedGoal] = useState(null)
 
-  const onTrack = goals.filter(g => getPaceStatus(g) === 'on-track')
-  const atRisk = goals.filter(g => getPaceStatus(g) === 'at-risk')
-  const completed = goals.filter(g => g.progress >= 100)
+  useEffect(() => {
+    const cat = searchParams.get('category')
+    setCategory(cat || 'All')
+    setSelectedGoal(null)
+  }, [searchParams])
+
+  const categoryGoals = category === 'All' ? goals : goals.filter(g => g.category === category)
+  const onTrack = categoryGoals.filter(g => getPaceStatus(g) === 'on-track')
+  const atRisk = categoryGoals.filter(g => getPaceStatus(g) === 'at-risk')
+  const completed = categoryGoals.filter(g => g.progress >= 100)
 
   const getFiltered = () => {
-    let base = goals
+    let base = categoryGoals
     if (tab === 'On Track') base = onTrack
     else if (tab === 'At Risk') base = atRisk
     else if (tab === 'Completed') base = completed
-
-    if (category !== 'All') base = base.filter(g => g.category === category)
 
     return [...base].sort((a, b) => {
       if (sort === 'progress-high') return (b.progress || 0) - (a.progress || 0)
@@ -304,8 +310,29 @@ export default function GoalsPage() {
       {/* Header */}
       <div className={styles.header}>
         <div>
-          <h1 className={styles.title}>Goals</h1>
-          <p className={styles.sub}>Manage and track all your goals in one place.</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            <h1 className={styles.title}>
+              {category !== 'All' ? `${category} Goals` : 'Goals'}
+            </h1>
+            {category !== 'All' && (
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: '5px',
+                fontSize: '0.72rem', fontWeight: 600,
+                color: CATEGORY_COLORS[category],
+                background: CATEGORY_COLORS[category] + '18',
+                border: `1px solid ${CATEGORY_COLORS[category]}44`,
+                padding: '3px 10px', borderRadius: '99px',
+                cursor: 'pointer',
+              }} onClick={() => setCategory('All')}>
+                {category} <X size={11} />
+              </span>
+            )}
+          </div>
+          <p className={styles.sub}>
+            {category !== 'All'
+              ? `${goals.filter(g => g.category === category).length} goals in ${category}`
+              : 'Manage and track all your goals in one place.'}
+          </p>
         </div>
         <button className="btn btn-primary" onClick={() => setShowAdd(true)}>
           <Plus size={15} /> New Goal
@@ -315,7 +342,7 @@ export default function GoalsPage() {
       {/* Status tabs */}
       <div className={styles.tabs}>
         {[
-          { key: 'All', label: 'All Goals', count: goals.length, color: 'var(--accent)' },
+          { key: 'All', label: 'All Goals', count: categoryGoals.length, color: 'var(--accent)' },
           { key: 'On Track', label: 'On Track', count: onTrack.filter(g => g.progress < 100).length, color: '#3ecf8e' },
           { key: 'At Risk', label: 'At Risk', count: atRisk.length, color: '#f0a844' },
           { key: 'Completed', label: 'Completed', count: completed.length, color: '#3b82fe' },

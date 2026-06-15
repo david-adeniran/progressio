@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   collection,
   addDoc,
@@ -9,12 +9,33 @@ import {
   query,
   orderBy,
   serverTimestamp,
+  setDoc,
+  getDoc,
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
+import { ACHIEVEMENTS, calcTotalXP } from "../lib/xp";
 
 export function useGoals(userId) {
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [persistedAchievements, setPersistedAchievements] = useState(new Set())
+  const persistedRef = useRef(new Set())
+  const [isResetting, setIsResetting] = useState(false)
+
+  // Load persisted achievements from Firestore
+  useEffect(() => {
+    if (!userId) return;
+    getDoc(doc(db, "users", userId)).then(snap => {
+      if (snap.exists()) {
+        const data = snap.data();
+        if (data.unlockedAchievements) {
+          const s = new Set(data.unlockedAchievements)
+          setPersistedAchievements(s)
+          persistedRef.current = s
+        }
+      }
+    });
+  }, [userId]);
 
   useEffect(() => {
     if (!userId) {
@@ -42,6 +63,16 @@ export function useGoals(userId) {
       logs: [],
       createdAt: serverTimestamp(),
     });
+    // Save achievements immediately after adding a goal
+    const updatedGoals = [...goals, { ...data, progress: 0, logs: [] }]
+    const totalXP = calcTotalXP(updatedGoals)
+    const current = new Set(persistedRef.current)
+    for (const a of ACHIEVEMENTS) {
+      try { if (a.condition(updatedGoals, totalXP)) current.add(a.id) } catch (e) {}
+    }
+    persistedRef.current = current
+    setPersistedAchievements(current)
+    await saveAchievements(current)
   }
 
   async function updateGoal(goalId, data) {
@@ -82,6 +113,19 @@ export function useGoals(userId) {
       xp: (goal.xp || 0) + earnedXp,
     });
 
+    // Save achievements immediately after logging
+    const updatedGoals = goals.map(g => g.id === goalId
+      ? { ...g, logs: [...(g.logs || []), entry], currentAmount: newTotal, progress: newProgress }
+      : g)
+    const totalXP = calcTotalXP(updatedGoals)
+    const current = new Set(persistedRef.current)
+    for (const a of ACHIEVEMENTS) {
+      try { if (a.condition(updatedGoals, totalXP)) current.add(a.id) } catch (e) {}
+    }
+    persistedRef.current = current
+    setPersistedAchievements(current)
+    await saveAchievements(current)
+
     return { xpEarned: earnedXp, newProgress };
   }
 
@@ -108,19 +152,40 @@ export function useGoals(userId) {
     return goals.reduce((s, g) => s + (g.xp || 0), 0);
   }
 
+  async function saveAchievements(ids) {
+    if (!userId) return;
+    await setDoc(doc(db, "users", userId), { unlockedAchievements: [...ids] }, { merge: true });
+  }
+
   function getUnlockedAchievements() {
-    const unlocked = new Set();
-    if (goals.length >= 1) unlocked.add("first_goal");
-    if (goals.length >= 5) unlocked.add("goals_5");
-    if (goals.length >= 10) unlocked.add("goals_10");
-    const totalLogs = goals.reduce((s, g) => s + (g.logs || []).length, 0);
-    if (totalLogs >= 1) unlocked.add("first_log");
-    const completed = goals.filter((g) => g.progress >= 100);
-    if (completed.length >= 1) unlocked.add("first_complete");
-    if (completed.length >= 3) unlocked.add("complete_3");
-    const cats = new Set(goals.map((g) => g.category));
-    if (cats.size >= 7) unlocked.add("all_categories");
-    return unlocked;
+    if (isResetting) return new Set()
+
+    const current = new Set(persistedRef.current)
+    const totalXP = calcTotalXP(goals)
+
+    for (const a of ACHIEVEMENTS) {
+      try {
+        if (a.condition(goals, totalXP)) current.add(a.id)
+      } catch (e) {}
+    }
+
+    const hasNew = [...current].some(id => !persistedRef.current.has(id))
+    if (hasNew) {
+      persistedRef.current = current
+      setPersistedAchievements(current)
+      saveAchievements(current)
+    }
+
+    return current
+  }
+
+  async function resetAchievements() {
+    if (!userId) return
+    setIsResetting(true)
+    persistedRef.current = new Set()
+    setPersistedAchievements(new Set())
+    await setDoc(doc(db, "users", userId), { unlockedAchievements: [] }, { merge: true })
+    setIsResetting(false)
   }
 
   return {
@@ -133,5 +198,7 @@ export function useGoals(userId) {
     logMilestone,
     getTotalXp,
     getUnlockedAchievements,
+    resetAchievements,
+    persistedAchievements,
   };
 }
