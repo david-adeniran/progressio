@@ -65,6 +65,10 @@
   white-space: nowrap; letter-spacing: 0.03em;
   box-shadow: 0 2px 8px rgba(240,168,68,0.4);
 }
+.ccGreeting {
+  font-size: 0.85rem; font-weight: 600;
+  color: var(--text-muted); margin-bottom: 2px;
+}
 .ccName {
   font-family: var(--font-display); font-size: 1.55rem; font-weight: 800;
   color: var(--text); letter-spacing: -0.03em; line-height: 1.1;
@@ -205,7 +209,7 @@
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
 .catName { font-size: 0.78rem; font-weight: 600; color: var(--text); flex: 1; letter-spacing: -0.01em; }
-.catRing { position: relative; flex-shrink: 0; margin-left: -6px; }
+.catRing { position: relative; flex-shrink: 0; }
 .catPct {
   position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
   font-size: 0.58rem; font-weight: 800; letter-spacing: -0.02em;

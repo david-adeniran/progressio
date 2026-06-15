@@ -5,10 +5,10 @@ import { useGoals } from "../hooks/useGoals";
 import GoalCard from "../components/GoalCard";
 import AddGoalModal from "../components/AddGoalModal";
 import {
-  calcTotalXP, getLevelInfo, getCategoryLevel,
-  getUnlockedAchievements, ACHIEVEMENTS,
+  calcTotalXP, getLevelInfo, getCategoryLevel, ACHIEVEMENTS,
 } from "../lib/xp";
 import styles from "./DashboardPage.module.css";
+import UserAvatar from "../components/UserAvatar";
 import {
   Wallet, Dumbbell, BookOpen, Briefcase, Heart, Plane,
   Leaf, Zap, Trophy, Flame, Plus, Target, LayoutGrid,
@@ -31,6 +31,8 @@ const ACHIEVEMENT_ICONS = {
   rocket: Rocket, globe: Globe, flame: Flame,
   zap: Zap, star: Star, trophy: Trophy,
 };
+
+const GREETINGS = ["Howfar", "How you dey", "Wagwan", "Hey", "What's up"];
 
 function SectionIcon({ category, size = 18, color }) {
   const Icon = SECTION_ICONS[category];
@@ -102,8 +104,9 @@ function MotivationalBanner({ name, goals, streak }) {
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const { goals, loading, addGoal, deleteGoal } = useGoals(user?.uid);
+  const { goals, loading, addGoal, deleteGoal, getUnlockedAchievements } = useGoals(user?.uid);
   const [showAdd, setShowAdd] = useState(false);
+  const [greeting] = useState(() => GREETINGS[Math.floor(Math.random() * GREETINGS.length)]);
   const [filter, setFilter] = useState("All");
   const [goalFilter, setGoalFilter] = useState("All"); // All / On Track / At Risk / Completed
   const navigate = useNavigate();
@@ -112,7 +115,8 @@ export default function DashboardPage() {
   const categories = Object.keys(CATEGORY_COLORS);
   const totalXP = calcTotalXP(goals);
   const levelInfo = getLevelInfo(totalXP);
-  const unlockedAchievements = getUnlockedAchievements(goals, totalXP);
+  const unlockedIds = getUnlockedAchievements();
+  const unlockedAchievements = ACHIEVEMENTS.filter(a => unlockedIds.has(a.id));
   const streak = calcStreak(goals);
   const completedGoals = goals.filter(g => g.progress >= 100);
   const completionRate = goals.length
@@ -145,11 +149,11 @@ export default function DashboardPage() {
           <div className={styles.ccLabel}>COMMAND CENTER</div>
           <div className={styles.ccProfile}>
             <div className={styles.ccAvatar}>
-              <span>{name[0]?.toUpperCase()}</span>
+              <UserAvatar size={52} />
               <div className={styles.ccLevel}>Lv.{levelInfo.level}</div>
             </div>
             <div>
-              <div className={styles.ccName}>{name}</div>
+              <div className={styles.ccName}>{greeting}, {name}</div>
               <div className={styles.ccTitle}>
                 <span style={{ color: "var(--accent)", fontWeight: 700 }}>{levelInfo.title}</span>
                 <Zap size={13} color="var(--gold)" style={{ marginLeft: 4 }} />

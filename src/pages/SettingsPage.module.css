@@ -4,7 +4,7 @@
 .sub { font-size: 0.82rem; color: var(--text-muted); margin-top: 3px; }
 
 .section {
-  background: var(--surface); border: 1px solid var(--border-light);
+  background: var(--surface); border: 1px solid var(--border);
   border-radius: 18px; padding: 1.35rem 1.5rem; margin-bottom: 1.1rem;
 }
 .sectionHeader { display: flex; align-items: center; gap: 8px; margin-bottom: 1.1rem; }
@@ -32,10 +32,10 @@
 .toggleSub { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
 .themeToggle {
   width: 46px; height: 26px; border-radius: 99px; border: none; cursor: pointer;
-  position: relative; background: var(--surface-3); transition: background 0.2s;
+  position: relative; background: var(--border-light); transition: background 0.2s;
   flex-shrink: 0;
 }
-.dark { background: var(--surface-3); }
+.dark { background: rgba(124,106,247,0.4); }
 .themeKnob {
   position: absolute; top: 3px; left: 3px;
   width: 20px; height: 20px; border-radius: 50%;
@@ -48,9 +48,98 @@
 /* Sign out */
 .signOutBtn {
   display: flex; align-items: center; gap: 10px; width: 100%;
-  background: var(--surface-2); border: 1px solid var(--border);
+  background: rgba(242,90,90,0.08); border: 1px solid rgba(242,90,90,0.2);
   border-radius: 10px; padding: 0.8rem 1rem;
   color: var(--danger); font-size: 0.875rem; font-weight: 500;
   cursor: pointer; font-family: var(--font-body); transition: all 0.15s;
 }
-.signOutBtn:hover { background: var(--surface-3); border-color: var(--border-light); }
+.signOutBtn:hover { background: rgba(242,90,90,0.15); border-color: rgba(242,90,90,0.4); }
+
+/* Avatar preview */
+.avatarPreview {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 1.25rem;
+  padding: 1rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.avatarPreviewImg {
+  width: 56px; height: 56px; border-radius: 50%;
+  overflow: hidden; flex-shrink: 0;
+  border: 2px solid var(--accent);
+  box-shadow: 0 0 12px rgba(124,106,247,0.3);
+}
+.avatarPreviewImg svg { width: 100%; height: 100%; }
+.avatarInitials {
+  width: 100%; height: 100%;
+  background: linear-gradient(135deg, var(--accent), var(--success));
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-weight: 700;
+  font-size: 1.4rem; color: #fff;
+}
+.avatarPreviewName { font-size: 0.95rem; font-weight: 600; color: var(--text); }
+.avatarPreviewEmail { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
+.avatarSavingText { font-size: 0.72rem; color: var(--accent); margin-top: 3px; }
+
+/* Avatar grid */
+.avatarGrid {
+  display: grid; grid-template-columns: repeat(5, 64px);
+  gap: 10px; margin-top: 6px;
+}
+.avatarOption {
+  position: relative; background: var(--surface-2);
+  border: 2px solid var(--border); border-radius: 50%;
+  cursor: pointer; padding: 0; overflow: hidden;
+  aspect-ratio: 1; transition: all 0.18s;
+}
+.avatarOption:hover { border-color: var(--accent); transform: scale(1.06); }
+.avatarSelected { border-color: var(--accent) !important; box-shadow: 0 0 12px rgba(124,106,247,0.45); }
+.avatarSvgWrap { width: 100%; height: 100%; display: block; }
+.avatarSvgWrap svg { width: 100%; height: 100%; display: block; }
+.avatarCheck {
+  position: absolute; bottom: 2px; right: 2px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+}
+.avatarHint { font-size: 0.68rem; color: var(--text-dim); margin-top: 6px; }
+
+/* Avatar picker */
+.avatarGroupLabel {
+  font-size: 0.72rem; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.05em;
+  font-weight: 600; margin-bottom: 10px;
+}
+.avatarOption {
+  position: relative; width: 64px; height: 64px;
+  border-radius: 50%; border: 2px solid var(--border);
+  background: var(--surface-2); cursor: pointer;
+  padding: 0; overflow: hidden;
+  transition: all 0.18s cubic-bezier(0.22,1,0.36,1);
+}
+.avatarOption:hover {
+  border-color: var(--accent);
+  transform: scale(1.08);
+  box-shadow: 0 4px 16px rgba(124,106,247,0.3);
+}
+.avatarSelected {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(124,106,247,0.25), 0 4px 16px rgba(124,106,247,0.3) !important;
+  transform: scale(1.05);
+}
+.avatarImg {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.avatarCheck {
+  position: absolute; bottom: 0; right: 0;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--surface);
+}
+.savingBadge {
+  font-size: 0.7rem; color: var(--text-muted);
+  background: var(--surface-2); border: 1px solid var(--border);
+  padding: 2px 8px; border-radius: 99px; margin-left: auto;
+}

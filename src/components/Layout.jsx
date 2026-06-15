@@ -10,6 +10,7 @@ import {
   BarChart2, Settings, LogOut, Sun, Moon, Menu, X, ChevronRight,
 } from "lucide-react";
 import styles from "./Layout.module.css";
+import UserAvatar from "./UserAvatar";
 
 
 const NAV_ITEMS = [
@@ -91,7 +92,7 @@ export default function Layout() {
           </div>
 
           <div className={styles.sidebarUser}>
-            <div className={styles.sidebarAvatar}>{name[0]?.toUpperCase()}</div>
+            <UserAvatar size={36} />
             <div className={styles.sidebarUserInfo}>
               <span className={styles.sidebarUserName}>{name}</span>
               <span className={styles.sidebarUserEmail}>{user?.email}</span>
