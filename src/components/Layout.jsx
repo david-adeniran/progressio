@@ -92,7 +92,9 @@ export default function Layout() {
           </div>
 
           <div className={styles.sidebarUser}>
-            <UserAvatar size={36} />
+          <Link to ="/settings">
+          <UserAvatar size={36} />
+          </Link>
             <div className={styles.sidebarUserInfo}>
               <span className={styles.sidebarUserName}>{name}</span>
               <span className={styles.sidebarUserEmail}>{user?.email}</span>

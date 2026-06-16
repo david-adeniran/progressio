@@ -98,7 +98,7 @@
   display: flex; flex-direction: column; align-items: center; gap: 7px;
   padding: 1.25rem 0.85rem; border-radius: 14px; text-align: center;
   background: var(--surface); border: 1px solid var(--border);
-  opacity: 0.4; transition: all 0.22s cubic-bezier(0.22,1,0.36,1);
+  transition: all 0.22s cubic-bezier(0.22,1,0.36,1);
   position: relative; cursor: default;
 }
 .badgeUnlocked {
@@ -123,24 +123,24 @@
 }
 .badgeLockTag {
   position: absolute; top: 8px; right: 8px;
-  color: var(--text-dim);
+  color: var(--text);
 }
 .badgeIcon {
   width: 54px; height: 54px; border-radius: 14px;
-  background: var(--surface-2);
+  background: var(--surface-2);;
   display: flex; align-items: center; justify-content: center;
   transition: background 0.2s, box-shadow 0.2s;
 }
 .badgeUnlocked .badgeIcon {
-  background: color-mix(in srgb, var(--tier-color, var(--gold)) 15%, transparent);
+  background: color-mix(in srgb, var(--tier-color, var(--gold)) 15%, transparent); opacity: 0.45;
   box-shadow: 0 0 16px color-mix(in srgb, var(--tier-color, var(--gold)) 25%, transparent);
 }
 .tierTag {
   font-size: 0.58rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
   padding: 1px 6px; border-radius: 5px; border: 1px solid;
 }
-.badgeName { font-size: 0.78rem; font-weight: 700; color: var(--text); line-height: 1.2; }
-.badgeDesc { font-size: 0.65rem; color: var(--text-muted); line-height: 1.4; }
+.badgeName { font-size: 0.78rem; font-weight: 700; color: var(--text-muted); line-height: 1.2; }
+.badgeDesc { font-size: 0.65rem; color: var(--text-dim); line-height: 1.4; }
 .badgeCheck { font-size: 0.6rem; font-weight: 700; color: var(--success); background: var(--success-dim); padding: 2px 7px; border-radius: 99px; }
 
 /* ── Right panel ── */
@@ -182,7 +182,7 @@
 .roadmapTrack { display: flex; align-items: center; gap: 0; overflow-x: auto; padding-bottom: 0.5rem; }
 .roadmapNode { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; min-width: 110px; }
 .roadmapDot {
-  width: 36px; height: 36px; border-radius: 50%;
+  width: 50px; height: 50px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-size: 0.72rem; font-weight: 800;
   border: 2px solid var(--border);

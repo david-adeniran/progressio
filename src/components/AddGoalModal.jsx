@@ -1,8 +1,19 @@
 import { useState } from 'react'
-import { Calendar } from 'lucide-react'
-import styles from './Modal.module.css'
+import { Calendar, X, ChevronRight, Target, TrendingUp, Wallet, Dumbbell, BookOpen, Briefcase, Heart, Plane, Leaf, Zap } from 'lucide-react'
+import styles from './AddGoalModal.module.css'
 
 const FREQUENCIES = ['Daily', 'Weekly', 'Monthly']
+
+const CATEGORY_COLORS = {
+  Finance: '#7c6af7', Fitness: '#3ecf8e', Learning: '#f0a844',
+  Career: '#4ab8f5', Health: '#f25a95', Travel: '#5de0e6',
+  Personal: '#b8a0f7', Custom: '#aaa',
+}
+const CATEGORY_ICONS = {
+  Finance: Wallet, Fitness: Dumbbell, Learning: BookOpen,
+  Career: Briefcase, Health: Heart, Travel: Plane,
+  Personal: Leaf, Custom: Zap,
+}
 
 // ─── UNIT CATEGORIES ────────────────────────────────────────────────────────
 export const UNIT_CATEGORIES = [
@@ -13,122 +24,55 @@ export const UNIT_CATEGORIES = [
       { label: 'US Dollar ($)', symbol: '$', code: 'USD' },
       { label: 'Euro (€)', symbol: '€', code: 'EUR' },
       { label: 'British Pound (£)', symbol: '£', code: 'GBP' },
-      // Rest of world currencies alphabetically
       { label: 'Afghan Afghani (AFN)', symbol: '؋', code: 'AFN' },
       { label: 'Albanian Lek (ALL)', symbol: 'L', code: 'ALL' },
       { label: 'Algerian Dinar (DZD)', symbol: 'دج', code: 'DZD' },
       { label: 'Argentine Peso (ARS)', symbol: '$', code: 'ARS' },
-      { label: 'Armenian Dram (AMD)', symbol: '֏', code: 'AMD' },
       { label: 'Australian Dollar (AUD)', symbol: 'A$', code: 'AUD' },
-      { label: 'Azerbaijani Manat (AZN)', symbol: '₼', code: 'AZN' },
-      { label: 'Bahraini Dinar (BHD)', symbol: '.د.ب', code: 'BHD' },
       { label: 'Bangladeshi Taka (BDT)', symbol: '৳', code: 'BDT' },
-      { label: 'Belarusian Ruble (BYN)', symbol: 'Br', code: 'BYN' },
-      { label: 'Belize Dollar (BZD)', symbol: 'BZ$', code: 'BZD' },
-      { label: 'Bolivian Boliviano (BOB)', symbol: 'Bs.', code: 'BOB' },
       { label: 'Brazilian Real (BRL)', symbol: 'R$', code: 'BRL' },
-      { label: 'Brunei Dollar (BND)', symbol: 'B$', code: 'BND' },
-      { label: 'Bulgarian Lev (BGN)', symbol: 'лв', code: 'BGN' },
-      { label: 'Burundian Franc (BIF)', symbol: 'Fr', code: 'BIF' },
-      { label: 'Cambodian Riel (KHR)', symbol: '៛', code: 'KHR' },
       { label: 'Canadian Dollar (CAD)', symbol: 'CA$', code: 'CAD' },
-      { label: 'Cape Verdean Escudo (CVE)', symbol: '$', code: 'CVE' },
-      { label: 'Central African CFA Franc (XAF)', symbol: 'Fr', code: 'XAF' },
       { label: 'Chilean Peso (CLP)', symbol: '$', code: 'CLP' },
       { label: 'Chinese Yuan (CNY)', symbol: '¥', code: 'CNY' },
       { label: 'Colombian Peso (COP)', symbol: '$', code: 'COP' },
-      { label: 'Congolese Franc (CDF)', symbol: 'Fr', code: 'CDF' },
-      { label: 'Costa Rican Colón (CRC)', symbol: '₡', code: 'CRC' },
-      { label: 'Croatian Kuna (HRK)', symbol: 'kn', code: 'HRK' },
-      { label: 'Cuban Peso (CUP)', symbol: '$', code: 'CUP' },
       { label: 'Czech Koruna (CZK)', symbol: 'Kč', code: 'CZK' },
       { label: 'Danish Krone (DKK)', symbol: 'kr', code: 'DKK' },
-      { label: 'Dominican Peso (DOP)', symbol: 'RD$', code: 'DOP' },
       { label: 'Egyptian Pound (EGP)', symbol: '£', code: 'EGP' },
       { label: 'Ethiopian Birr (ETB)', symbol: 'Br', code: 'ETB' },
-      { label: 'Fijian Dollar (FJD)', symbol: 'FJ$', code: 'FJD' },
       { label: 'Ghanaian Cedi (GHS)', symbol: '₵', code: 'GHS' },
-      { label: 'Guatemalan Quetzal (GTQ)', symbol: 'Q', code: 'GTQ' },
-      { label: 'Guinean Franc (GNF)', symbol: 'Fr', code: 'GNF' },
-      { label: 'Haitian Gourde (HTG)', symbol: 'G', code: 'HTG' },
-      { label: 'Honduran Lempira (HNL)', symbol: 'L', code: 'HNL' },
       { label: 'Hong Kong Dollar (HKD)', symbol: 'HK$', code: 'HKD' },
       { label: 'Hungarian Forint (HUF)', symbol: 'Ft', code: 'HUF' },
-      { label: 'Icelandic Króna (ISK)', symbol: 'kr', code: 'ISK' },
       { label: 'Indian Rupee (INR)', symbol: '₹', code: 'INR' },
       { label: 'Indonesian Rupiah (IDR)', symbol: 'Rp', code: 'IDR' },
-      { label: 'Iranian Rial (IRR)', symbol: '﷼', code: 'IRR' },
-      { label: 'Iraqi Dinar (IQD)', symbol: 'ع.د', code: 'IQD' },
       { label: 'Israeli New Shekel (ILS)', symbol: '₪', code: 'ILS' },
-      { label: 'Jamaican Dollar (JMD)', symbol: 'J$', code: 'JMD' },
       { label: 'Japanese Yen (JPY)', symbol: '¥', code: 'JPY' },
-      { label: 'Jordanian Dinar (JOD)', symbol: 'JD', code: 'JOD' },
-      { label: 'Kazakhstani Tenge (KZT)', symbol: '₸', code: 'KZT' },
       { label: 'Kenyan Shilling (KES)', symbol: 'KSh', code: 'KES' },
       { label: 'Kuwaiti Dinar (KWD)', symbol: 'KD', code: 'KWD' },
-      { label: 'Kyrgyzstani Som (KGS)', symbol: 'с', code: 'KGS' },
-      { label: 'Laotian Kip (LAK)', symbol: '₭', code: 'LAK' },
-      { label: 'Lebanese Pound (LBP)', symbol: 'ل.ل', code: 'LBP' },
-      { label: 'Libyan Dinar (LYD)', symbol: 'LD', code: 'LYD' },
-      { label: 'Macanese Pataca (MOP)', symbol: 'MOP$', code: 'MOP' },
-      { label: 'Malagasy Ariary (MGA)', symbol: 'Ar', code: 'MGA' },
-      { label: 'Malawian Kwacha (MWK)', symbol: 'MK', code: 'MWK' },
       { label: 'Malaysian Ringgit (MYR)', symbol: 'RM', code: 'MYR' },
-      { label: 'Maldivian Rufiyaa (MVR)', symbol: 'Rf', code: 'MVR' },
-      { label: 'Mauritanian Ouguiya (MRU)', symbol: 'UM', code: 'MRU' },
-      { label: 'Mauritian Rupee (MUR)', symbol: '₨', code: 'MUR' },
       { label: 'Mexican Peso (MXN)', symbol: 'MX$', code: 'MXN' },
-      { label: 'Moldovan Leu (MDL)', symbol: 'L', code: 'MDL' },
-      { label: 'Mongolian Tögrög (MNT)', symbol: '₮', code: 'MNT' },
       { label: 'Moroccan Dirham (MAD)', symbol: 'MAD', code: 'MAD' },
-      { label: 'Mozambican Metical (MZN)', symbol: 'MT', code: 'MZN' },
-      { label: 'Myanmar Kyat (MMK)', symbol: 'K', code: 'MMK' },
-      { label: 'Namibian Dollar (NAD)', symbol: 'N$', code: 'NAD' },
-      { label: 'Nepalese Rupee (NPR)', symbol: '₨', code: 'NPR' },
       { label: 'New Zealand Dollar (NZD)', symbol: 'NZ$', code: 'NZD' },
-      { label: 'Nicaraguan Córdoba (NIO)', symbol: 'C$', code: 'NIO' },
       { label: 'Norwegian Krone (NOK)', symbol: 'kr', code: 'NOK' },
-      { label: 'Omani Rial (OMR)', symbol: 'ر.ع.', code: 'OMR' },
       { label: 'Pakistani Rupee (PKR)', symbol: '₨', code: 'PKR' },
-      { label: 'Panamanian Balboa (PAB)', symbol: 'B/.', code: 'PAB' },
-      { label: 'Paraguayan Guaraní (PYG)', symbol: '₲', code: 'PYG' },
-      { label: 'Peruvian Sol (PEN)', symbol: 'S/.', code: 'PEN' },
       { label: 'Philippine Peso (PHP)', symbol: '₱', code: 'PHP' },
       { label: 'Polish Zloty (PLN)', symbol: 'zł', code: 'PLN' },
-      { label: 'Qatari Riyal (QAR)', symbol: 'QR', code: 'QAR' },
       { label: 'Romanian Leu (RON)', symbol: 'lei', code: 'RON' },
       { label: 'Russian Ruble (RUB)', symbol: '₽', code: 'RUB' },
-      { label: 'Rwandan Franc (RWF)', symbol: 'Fr', code: 'RWF' },
       { label: 'Saudi Riyal (SAR)', symbol: '﷼', code: 'SAR' },
-      { label: 'Serbian Dinar (RSD)', symbol: 'din', code: 'RSD' },
-      { label: 'Sierra Leonean Leone (SLL)', symbol: 'Le', code: 'SLL' },
       { label: 'Singapore Dollar (SGD)', symbol: 'S$', code: 'SGD' },
-      { label: 'Somali Shilling (SOS)', symbol: 'Sh', code: 'SOS' },
       { label: 'South African Rand (ZAR)', symbol: 'R', code: 'ZAR' },
       { label: 'South Korean Won (KRW)', symbol: '₩', code: 'KRW' },
-      { label: 'Sri Lankan Rupee (LKR)', symbol: '₨', code: 'LKR' },
-      { label: 'Sudanese Pound (SDG)', symbol: '£', code: 'SDG' },
       { label: 'Swedish Krona (SEK)', symbol: 'kr', code: 'SEK' },
       { label: 'Swiss Franc (CHF)', symbol: 'Fr', code: 'CHF' },
-      { label: 'Syrian Pound (SYP)', symbol: '£', code: 'SYP' },
-      { label: 'Taiwanese Dollar (TWD)', symbol: 'NT$', code: 'TWD' },
-      { label: 'Tajikistani Somoni (TJS)', symbol: 'SM', code: 'TJS' },
       { label: 'Tanzanian Shilling (TZS)', symbol: 'Sh', code: 'TZS' },
       { label: 'Thai Baht (THB)', symbol: '฿', code: 'THB' },
-      { label: 'Trinidad & Tobago Dollar (TTD)', symbol: 'TT$', code: 'TTD' },
-      { label: 'Tunisian Dinar (TND)', symbol: 'DT', code: 'TND' },
       { label: 'Turkish Lira (TRY)', symbol: '₺', code: 'TRY' },
       { label: 'Ugandan Shilling (UGX)', symbol: 'USh', code: 'UGX' },
       { label: 'Ukrainian Hryvnia (UAH)', symbol: '₴', code: 'UAH' },
-      { label: 'United Arab Emirates Dirham (AED)', symbol: 'د.إ', code: 'AED' },
-      { label: 'Uruguayan Peso (UYU)', symbol: '$U', code: 'UYU' },
-      { label: 'Uzbekistani Som (UZS)', symbol: 'лв', code: 'UZS' },
-      { label: 'Venezuelan Bolívar (VES)', symbol: 'Bs.S', code: 'VES' },
+      { label: 'UAE Dirham (AED)', symbol: 'د.إ', code: 'AED' },
       { label: 'Vietnamese Dong (VND)', symbol: '₫', code: 'VND' },
       { label: 'West African CFA Franc (XOF)', symbol: 'Fr', code: 'XOF' },
-      { label: 'Yemeni Rial (YER)', symbol: '﷼', code: 'YER' },
       { label: 'Zambian Kwacha (ZMW)', symbol: 'ZK', code: 'ZMW' },
-      { label: 'Zimbabwean Dollar (ZWL)', symbol: 'Z$', code: 'ZWL' },
     ],
   },
   {
@@ -136,8 +80,6 @@ export const UNIT_CATEGORIES = [
     units: [
       { label: 'Kilometres (km)', symbol: 'km' },
       { label: 'Metres (m)', symbol: 'm' },
-      { label: 'Centimetres (cm)', symbol: 'cm' },
-      { label: 'Millimetres (mm)', symbol: 'mm' },
       { label: 'Miles (mi)', symbol: 'mi' },
       { label: 'Steps', symbol: 'steps' },
     ],
@@ -147,7 +89,6 @@ export const UNIT_CATEGORIES = [
     units: [
       { label: 'Kilograms (kg)', symbol: 'kg' },
       { label: 'Grams (g)', symbol: 'g' },
-      { label: 'Milligrams (mg)', symbol: 'mg' },
       { label: 'Pounds (lbs)', symbol: 'lbs' },
       { label: 'Ounces (oz)', symbol: 'oz' },
       { label: 'Stone (st)', symbol: 'st' },
@@ -166,7 +107,6 @@ export const UNIT_CATEGORIES = [
     units: [
       { label: 'Hours (hrs)', symbol: 'hrs' },
       { label: 'Minutes (min)', symbol: 'min' },
-      { label: 'Seconds (sec)', symbol: 'sec' },
       { label: 'Days', symbol: 'days' },
       { label: 'Weeks', symbol: 'weeks' },
     ],
@@ -179,9 +119,7 @@ export const UNIT_CATEGORIES = [
       { label: 'Sets', symbol: 'sets' },
       { label: 'Workouts', symbol: 'workouts' },
       { label: 'Litres of water (L)', symbol: 'L' },
-      { label: 'Millilitres (mL)', symbol: 'mL' },
       { label: 'Hours of sleep (hrs)', symbol: 'hrs sleep' },
-      { label: 'Heartbeats per min (bpm)', symbol: 'bpm' },
     ],
   },
   {
@@ -192,8 +130,6 @@ export const UNIT_CATEGORIES = [
       { label: 'Commits (code)', symbol: 'commits' },
       { label: 'Words written', symbol: 'words' },
       { label: 'Pomodoros', symbol: 'pomodoros' },
-      { label: 'Emails sent', symbol: 'emails' },
-      { label: 'Meetings', symbol: 'meetings' },
     ],
   },
   {
@@ -203,26 +139,31 @@ export const UNIT_CATEGORIES = [
       { label: 'Lessons', symbol: 'lessons' },
       { label: 'Certifications', symbol: 'certs' },
       { label: 'Practice sessions', symbol: 'sessions' },
-      { label: 'Flashcards', symbol: 'flashcards' },
+    ],
+  },
+  {
+    label: 'Travel',
+    units: [
+      { label: 'Flights taken', symbol: 'flights' },
+      { label: 'Countries visited', symbol: 'countries' },
+      { label: 'Cities visited', symbol: 'cities' },
+      { label: 'Distance travelled (km)', symbol: 'km' },
     ],
   },
   {
     label: 'Social & Habits',
     units: [
-      { label: 'Days streak', symbol: 'days' },
       { label: 'Times/occurrences', symbol: 'times' },
       { label: 'People met', symbol: 'people' },
-      { label: 'Calls made', symbol: 'calls' },
       { label: 'Posts published', symbol: 'posts' },
+      { label: 'Calls made', symbol: 'calls' },
     ],
   },
-  {
-    label: 'Custom',
-    units: [],
-  },
+  { label: 'Custom', units: [] },
 ]
 
 export default function AddGoalModal({ onClose, onAdd, categories }) {
+  const [step, setStep] = useState(1) // 1 = basics, 2 = tracking, 3 = schedule
   const [title, setTitle] = useState('')
   const [category, setCategory] = useState(categories[0])
   const [description, setDescription] = useState('')
@@ -230,14 +171,10 @@ export default function AddGoalModal({ onClose, onAdd, categories }) {
   const [targetAmount, setTargetAmount] = useState('')
   const [frequency, setFrequency] = useState('Daily')
   const [loading, setLoading] = useState(false)
-
-  // Dates
   const [hasDateRange, setHasDateRange] = useState(true)
   const todayStr = new Date().toISOString().split('T')[0]
   const [startDate, setStartDate] = useState(todayStr)
   const [endDate, setEndDate] = useState('')
-
-  // Unit picker
   const [unitCategory, setUnitCategory] = useState(UNIT_CATEGORIES[0].label)
   const [selectedUnit, setSelectedUnit] = useState(UNIT_CATEGORIES[0].units[0].symbol)
   const [customUnit, setCustomUnit] = useState('')
@@ -255,12 +192,13 @@ export default function AddGoalModal({ onClose, onAdd, categories }) {
     setCustomUnit('')
   }
 
+  const step1Valid = title.trim()
+  const step2Valid = trackingType === 'milestone' || (targetAmount && displayUnit.trim())
+  const canSubmit = step1Valid && step2Valid && (!hasDateRange || (startDate && endDate))
+
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!title.trim()) return
-    if (trackingType === 'numeric' && !targetAmount) return
-    if (trackingType === 'numeric' && !displayUnit.trim()) return
-    if (hasDateRange && (!startDate || !endDate)) return
+    if (!canSubmit) return
     setLoading(true)
     await onAdd({
       title: title.trim(),
@@ -277,188 +215,299 @@ export default function AddGoalModal({ onClose, onAdd, categories }) {
     setLoading(false)
   }
 
-  const canSubmit = title.trim() &&
-    (trackingType !== 'numeric' || targetAmount) &&
-    (trackingType !== 'numeric' || displayUnit.trim()) &&
-    (!hasDateRange || (startDate && endDate))
+  const catColor = CATEGORY_COLORS[category] || 'var(--accent)'
 
   return (
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={e => e.stopPropagation()}>
-        <div className={styles.modalHeader}>
-          <h2 className={styles.modalTitle}>New goal</h2>
-          <button className={styles.close} onClick={onClose}>✕</button>
+
+        {/* Header */}
+        <div className={styles.header} style={{ '--cat-color': catColor }}>
+          <div className={styles.headerInner}>
+            <div className={styles.headerIcon} style={{ background: catColor + '22' }}>
+              {(() => { const Icon = CATEGORY_ICONS[category] || Target; return <Icon size={20} color={catColor} strokeWidth={1.8} /> })()}
+            </div>
+            <div>
+              <h2 className={styles.title}>New Goal</h2>
+              <p className={styles.subtitle}>
+                {step === 1 ? 'Name it and pick a category' : step === 2 ? 'Set up tracking' : 'Set your timeline'}
+              </p>
+            </div>
+          </div>
+          <button className={styles.closeBtn} onClick={onClose}><X size={16} /></button>
+        </div>
+
+        {/* Step indicator */}
+        <div className={styles.steps}>
+          {['Basics', 'Tracking', 'Schedule'].map((s, i) => {
+            const n = i + 1
+            const active = step === n
+            const done = step > n
+            return (
+              <div key={s} className={styles.stepItem}>
+                <div
+                  className={`${styles.stepDot} ${active ? styles.stepActive : ''} ${done ? styles.stepDone : ''}`}
+                  onClick={() => done && setStep(n)}
+                  style={active || done ? { borderColor: catColor, background: done ? catColor : 'transparent' } : {}}
+                >
+                  {done ? '✓' : n}
+                </div>
+                <span className={styles.stepLabel} style={active ? { color: catColor } : {}}>{s}</span>
+                {i < 2 && <div className={`${styles.stepLine} ${done ? styles.stepLineDone : ''}`} style={done ? { background: catColor } : {}} />}
+              </div>
+            )
+          })}
         </div>
 
         <form onSubmit={handleSubmit}>
-          {/* Title */}
-          <div className="form-group">
-            <label>Goal title *</label>
-            <input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Save up for rent" required autoFocus />
-          </div>
+          <div className={styles.body}>
 
-          {/* Category */}
-          <div className="form-group">
-            <label>Category</label>
-            <select value={category} onChange={e => setCategory(e.target.value)}>
-              {categories.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
+            {/* ── Step 1: Basics ── */}
+            {step === 1 && (
+              <div className={styles.stepContent}>
+                <div className={styles.field}>
+                  <label className={styles.label}>Goal title *</label>
+                  <input
+                    className={styles.input}
+                    value={title}
+                    onChange={e => setTitle(e.target.value)}
+                    placeholder="e.g. Save ₦500k for rent"
+                    autoFocus
+                  />
+                </div>
 
-          {/* Tracking type */}
-          <div className="form-group">
-            <label>Tracking type</label>
-            <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
-              {['numeric', 'milestone'].map(type => (
-                <button
-                  key={type} type="button"
-                  onClick={() => setTrackingType(type)}
-                  style={{
-                    flex: 1, padding: '0.6rem 0.5rem', borderRadius: 'var(--radius-sm)',
-                    border: `1px solid ${trackingType === type ? 'var(--accent)' : 'var(--border)'}`,
-                    background: trackingType === type ? 'var(--accent-dim)' : 'var(--surface-2)',
-                    color: trackingType === type ? 'var(--accent)' : 'var(--text-muted)',
-                    fontSize: '0.85rem', cursor: 'pointer', fontFamily: 'var(--font-body)',
-                    transition: 'all 0.15s', textAlign: 'center',
-                  }}
-                >
-                  {type === 'numeric' ? 'Numeric' : 'Milestone'}
-                  <div style={{ fontSize: '0.7rem', marginTop: '2px', opacity: 0.75 }}>
-                    {type === 'numeric' ? 'Log amounts, auto % calc' : 'Set % manually'}
+                <div className={styles.field}>
+                  <label className={styles.label}>Category</label>
+                  <div className={styles.categoryGrid}>
+                    {categories.map(cat => {
+                      const color = CATEGORY_COLORS[cat] || '#aaa'
+                      const selected = category === cat
+                      return (
+                        <button
+                          key={cat} type="button"
+                          className={`${styles.catBtn} ${selected ? styles.catBtnActive : ''}`}
+                          onClick={() => setCategory(cat)}
+                          style={selected ? { borderColor: color, background: color + '15', color } : {}}
+                        >
+                          {(() => { const Icon = CATEGORY_ICONS[cat] || Target; return <Icon size={18} color={selected ? color : 'var(--text-dim)'} strokeWidth={1.8} className={styles.catBtnIcon} /> })()}
+                          <span className={styles.catBtnLabel}>{cat}</span>
+                        </button>
+                      )
+                    })}
                   </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {trackingType === 'numeric' && (
-            <>
-              {/* Target amount */}
-              <div className="form-group">
-                <label>Target amount *</label>
-                <input
-                  type="number" min="1"
-                  value={targetAmount}
-                  onChange={e => setTargetAmount(e.target.value)}
-                  placeholder="e.g. 100000"
-                  required
-                />
-              </div>
-
-              {/* Unit category + unit picker */}
-              <div className="form-group">
-                <label>Unit category *</label>
-                <select value={unitCategory} onChange={e => handleUnitCategoryChange(e.target.value)}>
-                  {UNIT_CATEGORIES.map(c => (
-                    <option key={c.label} value={c.label}>{c.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              {currentCatHasUnits && (
-                <div className="form-group">
-                  <label>Unit *</label>
-                  <select key={unitCategory} value={selectedUnit} onChange={e => setSelectedUnit(e.target.value)} required>
-                    {currentCat.units.map(u => (
-                      <option key={u.symbol} value={u.symbol}>{u.label}</option>
-                    ))}
-                  </select>
                 </div>
-              )}
 
-              {isCustomUnitCat && (
-                <div className="form-group">
-                  <label>Custom unit *</label>
-                  <input
-                    value={customUnit}
-                    onChange={e => setCustomUnit(e.target.value)}
-                    placeholder="e.g. medals, clients, pull-ups"
-                    required
+                <div className={styles.field}>
+                  <label className={styles.label}>Description <span className={styles.optional}>(optional)</span></label>
+                  <textarea
+                    className={styles.textarea}
+                    value={description}
+                    onChange={e => setDescription(e.target.value)}
+                    placeholder="What does achieving this look like?"
+                    rows={3}
                   />
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* Frequency — locked to choice */}
-              <div className="form-group">
-                <label>Tracking frequency</label>
-                <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
-                  {FREQUENCIES.map(f => (
+            {/* ── Step 2: Tracking ── */}
+            {step === 2 && (
+              <div className={styles.stepContent}>
+                <div className={styles.field}>
+                  <label className={styles.label}>How do you want to track this?</label>
+                  <div className={styles.trackingToggle}>
                     <button
-                      key={f} type="button"
-                      onClick={() => setFrequency(f)}
-                      style={{
-                        flex: 1, padding: '0.5rem', borderRadius: 'var(--radius-sm)',
-                        border: `1px solid ${frequency === f ? 'var(--accent)' : 'var(--border)'}`,
-                        background: frequency === f ? 'var(--accent-dim)' : 'var(--surface-2)',
-                        color: frequency === f ? 'var(--accent)' : 'var(--text-muted)',
-                        fontSize: '0.82rem', cursor: 'pointer', fontFamily: 'var(--font-body)',
-                        transition: 'all 0.15s',
-                      }}
+                      type="button"
+                      className={`${styles.trackBtn} ${trackingType === 'numeric' ? styles.trackBtnActive : ''}`}
+                      onClick={() => setTrackingType('numeric')}
+                      style={trackingType === 'numeric' ? { borderColor: catColor, background: catColor + '15' } : {}}
                     >
-                      {f}
+                      <TrendingUp size={20} color={trackingType === 'numeric' ? catColor : 'var(--text-dim)'} />
+                      <span className={styles.trackBtnTitle} style={trackingType === 'numeric' ? { color: catColor } : {}}>Numeric</span>
+                      <span className={styles.trackBtnSub}>Log amounts, auto % calculated</span>
                     </button>
-                  ))}
+                    <button
+                      type="button"
+                      className={`${styles.trackBtn} ${trackingType === 'milestone' ? styles.trackBtnActive : ''}`}
+                      onClick={() => setTrackingType('milestone')}
+                      style={trackingType === 'milestone' ? { borderColor: catColor, background: catColor + '15' } : {}}
+                    >
+                      <Target size={20} color={trackingType === 'milestone' ? catColor : 'var(--text-dim)'} />
+                      <span className={styles.trackBtnTitle} style={trackingType === 'milestone' ? { color: catColor } : {}}>Milestone</span>
+                      <span className={styles.trackBtnSub}>Set percentage manually</span>
+                    </button>
+                  </div>
                 </div>
-                <p style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '5px' }}>
-                  Frequency is locked after creation — daily goals stay daily, weekly stay weekly, etc.
-                </p>
+
+                {trackingType === 'numeric' && (
+                  <>
+                    <div className={styles.field}>
+                      <label className={styles.label}>Target amount *</label>
+                      <input
+                        className={styles.input}
+                        type="number" min="1"
+                        value={targetAmount}
+                        onChange={e => setTargetAmount(e.target.value)}
+                        placeholder="e.g. 100000"
+                      />
+                    </div>
+
+                    <div className={styles.twoCol}>
+                      <div className={styles.field}>
+                        <label className={styles.label}>Unit category *</label>
+                        <select className={styles.select} value={unitCategory} onChange={e => handleUnitCategoryChange(e.target.value)}>
+                          {UNIT_CATEGORIES.map(c => <option key={c.label} value={c.label}>{c.label}</option>)}
+                        </select>
+                      </div>
+
+                      {currentCatHasUnits && (
+                        <div className={styles.field}>
+                          <label className={styles.label}>Unit *</label>
+                          <select className={styles.select} value={selectedUnit} onChange={e => setSelectedUnit(e.target.value)}>
+                            {currentCat.units.map(u => <option key={u.symbol} value={u.symbol}>{u.label}</option>)}
+                          </select>
+                        </div>
+                      )}
+
+                      {isCustomUnitCat && (
+                        <div className={styles.field}>
+                          <label className={styles.label}>Custom unit *</label>
+                          <input className={styles.input} value={customUnit} onChange={e => setCustomUnit(e.target.value)} placeholder="e.g. medals, clients" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className={styles.field}>
+                      <label className={styles.label}>Tracking frequency</label>
+                      <div className={styles.freqRow}>
+                        {FREQUENCIES.map(f => (
+                          <button
+                            key={f} type="button"
+                            className={`${styles.freqBtn} ${frequency === f ? styles.freqBtnActive : ''}`}
+                            onClick={() => setFrequency(f)}
+                            style={frequency === f ? { borderColor: catColor, background: catColor + '15', color: catColor } : {}}
+                          >
+                            {f}
+                          </button>
+                        ))}
+                      </div>
+                      <p className={styles.hint}>Frequency is locked after creation.</p>
+                    </div>
+                  </>
+                )}
+
+                {/* Preview */}
+                {trackingType === 'numeric' && targetAmount && displayUnit && (
+                  <div className={styles.preview} style={{ borderColor: catColor + '30', background: catColor + '08' }}>
+                    <span className={styles.previewLabel}>Preview</span>
+                    <span className={styles.previewVal} style={{ color: catColor }}>
+                      {displayUnit}{Number(targetAmount).toLocaleString()} target · {frequency}
+                    </span>
+                  </div>
+                )}
               </div>
-            </>
-          )}
+            )}
 
-          {/* Description */}
-          <div className="form-group">
-            <label>Description (optional)</label>
-            <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="What does achieving this look like?" />
-          </div>
-
-          {/* Date range */}
-          <div className="form-group">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <label style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Calendar size={13} color="var(--text-muted)" /> Date range
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: 'var(--text-muted)', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={!hasDateRange}
-                  onChange={e => setHasDateRange(!e.target.checked)}
-                  style={{ accentColor: 'var(--accent)', width: '14px', height: '14px' }}
-                />
-                No set dates
-              </label>
-            </div>
-
-            {hasDateRange && (
-              <div className="form-row">
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label>Start date *</label>
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={e => setStartDate(e.target.value)}
-                    required={hasDateRange}
-                  />
+            {/* ── Step 3: Schedule ── */}
+            {step === 3 && (
+              <div className={styles.stepContent}>
+                <div className={styles.field}>
+                  <div className={styles.dateToggleRow}>
+                    <div>
+                      <div className={styles.label}>Date range</div>
+                      <div className={styles.hint} style={{ marginTop: 2 }}>Set a start and end date for this goal</div>
+                    </div>
+                    <label className={styles.toggleWrap}>
+                      <input
+                        type="checkbox"
+                        checked={hasDateRange}
+                        onChange={e => setHasDateRange(e.target.checked)}
+                        className={styles.toggleInput}
+                      />
+                      <div className={`${styles.toggle} ${hasDateRange ? styles.toggleOn : ''}`}
+                        style={hasDateRange ? { background: catColor } : {}}>
+                        <div className={styles.toggleKnob} />
+                      </div>
+                    </label>
+                  </div>
                 </div>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label>End date *</label>
-                  <input
-                    type="date"
-                    value={endDate}
-                    min={startDate}
-                    onChange={e => setEndDate(e.target.value)}
-                    required={hasDateRange}
-                  />
+
+                {hasDateRange && (
+                  <div className={styles.twoCol}>
+                    <div className={styles.field}>
+                      <label className={styles.label}>
+                        <Calendar size={12} style={{ marginRight: 4 }} />
+                        Start date *
+                      </label>
+                      <input className={styles.input} type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
+                    </div>
+                    <div className={styles.field}>
+                      <label className={styles.label}>
+                        <Calendar size={12} style={{ marginRight: 4 }} />
+                        End date *
+                      </label>
+                      <input className={styles.input} type="date" value={endDate} min={startDate} onChange={e => setEndDate(e.target.value)} />
+                    </div>
+                  </div>
+                )}
+
+                {/* Summary card */}
+                <div className={styles.summary} style={{ borderColor: catColor + '30' }}>
+                  <div className={styles.summaryTitle}>Goal summary</div>
+                  <div className={styles.summaryRow}>
+                    <span className={styles.summaryKey}>Name</span>
+                    <span className={styles.summaryVal}>{title || '—'}</span>
+                  </div>
+                  <div className={styles.summaryRow}>
+                    <span className={styles.summaryKey}>Category</span>
+                    <span className={styles.summaryVal} style={{ color: catColor, display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      {(() => { const Icon = CATEGORY_ICONS[category] || Target; return <Icon size={13} color={catColor} strokeWidth={2} /> })()}
+                      {category}
+                    </span>
+                  </div>
+                  <div className={styles.summaryRow}>
+                    <span className={styles.summaryKey}>Tracking</span>
+                    <span className={styles.summaryVal}>{trackingType === 'numeric' ? `${displayUnit}${targetAmount} · ${frequency}` : 'Milestone'}</span>
+                  </div>
+                  {hasDateRange && (
+                    <div className={styles.summaryRow}>
+                      <span className={styles.summaryKey}>Timeline</span>
+                      <span className={styles.summaryVal}>{startDate} → {endDate || '?'}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
           </div>
 
-          <div className={styles.actions}>
-            <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
-            <button type="submit" className="btn btn-primary" disabled={loading || !canSubmit}>
-              {loading ? 'Adding…' : 'Add goal'}
-            </button>
+          {/* Footer */}
+          <div className={styles.footer}>
+            {step > 1
+              ? <button type="button" className={styles.backBtn} onClick={() => setStep(s => s - 1)}>← Back</button>
+              : <button type="button" className={styles.backBtn} onClick={onClose}>Cancel</button>
+            }
+            {step < 3
+              ? (
+                <button
+                  type="button"
+                  className={styles.nextBtn}
+                  style={{ background: catColor }}
+                  onClick={() => setStep(s => s + 1)}
+                  disabled={step === 1 ? !step1Valid : !step2Valid}
+                >
+                  Next <ChevronRight size={15} />
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  className={styles.nextBtn}
+                  style={{ background: catColor }}
+                  disabled={loading || !canSubmit}
+                >
+                  {loading ? 'Creating…' : 'Create goal'}
+                </button>
+              )
+            }
           </div>
         </form>
       </div>

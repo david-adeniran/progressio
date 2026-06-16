@@ -84,7 +84,7 @@
 
 /* Avatar grid */
 .avatarGrid {
-  display: grid; grid-template-columns: repeat(5, 64px);
+  display: grid; grid-template-columns: repeat(7, 64px);
   gap: 10px; margin-top: 6px;
 }
 .avatarOption {

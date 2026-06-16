@@ -20,9 +20,11 @@ export function useGoals(userId) {
   const [loading, setLoading] = useState(true);
   const [persistedAchievements, setPersistedAchievements] = useState(new Set())
   const persistedRef = useRef(new Set())
+  const [achievementXP, setAchievementXP] = useState(0)
+  const achievementXPRef = useRef(0)
   const [isResetting, setIsResetting] = useState(false)
 
-  // Load persisted achievements from Firestore
+  // Load persisted achievements and achievementXP from Firestore
   useEffect(() => {
     if (!userId) return;
     getDoc(doc(db, "users", userId)).then(snap => {
@@ -32,6 +34,10 @@ export function useGoals(userId) {
           const s = new Set(data.unlockedAchievements)
           setPersistedAchievements(s)
           persistedRef.current = s
+        }
+        if (data.achievementXP) {
+          setAchievementXP(data.achievementXP)
+          achievementXPRef.current = data.achievementXP
         }
       }
     });
@@ -152,16 +158,19 @@ export function useGoals(userId) {
     return goals.reduce((s, g) => s + (g.xp || 0), 0);
   }
 
-  async function saveAchievements(ids) {
+  async function saveAchievements(ids, xpTotal) {
     if (!userId) return;
-    await setDoc(doc(db, "users", userId), { unlockedAchievements: [...ids] }, { merge: true });
+    await setDoc(doc(db, "users", userId), {
+      unlockedAchievements: [...ids],
+      achievementXP: xpTotal ?? achievementXPRef.current,
+    }, { merge: true });
   }
 
   function getUnlockedAchievements() {
     if (isResetting) return new Set()
 
     const current = new Set(persistedRef.current)
-    const totalXP = calcTotalXP(goals)
+    const totalXP = calcTotalXP(goals) + achievementXPRef.current
 
     for (const a of ACHIEVEMENTS) {
       try {
@@ -169,11 +178,20 @@ export function useGoals(userId) {
       } catch (e) {}
     }
 
-    const hasNew = [...current].some(id => !persistedRef.current.has(id))
-    if (hasNew) {
+    const newIds = [...current].filter(id => !persistedRef.current.has(id))
+    if (newIds.length > 0) {
+      // Calculate XP for newly unlocked achievements
+      const TIER_XP = { legendary: 600, epic: 400, rare: 200, common: 100, hidden: 300 }
+      const addedXP = newIds.reduce((sum, id) => {
+        const a = ACHIEVEMENTS.find(a => a.id === id)
+        return sum + (a ? (TIER_XP[a.tier] || 50) : 0)
+      }, 0)
+      const newAchievementXP = achievementXPRef.current + addedXP
+      achievementXPRef.current = newAchievementXP
+      setAchievementXP(newAchievementXP)
       persistedRef.current = current
       setPersistedAchievements(current)
-      saveAchievements(current)
+      saveAchievements(current, newAchievementXP)
     }
 
     return current
@@ -183,8 +201,10 @@ export function useGoals(userId) {
     if (!userId) return
     setIsResetting(true)
     persistedRef.current = new Set()
+    achievementXPRef.current = 0
     setPersistedAchievements(new Set())
-    await setDoc(doc(db, "users", userId), { unlockedAchievements: [] }, { merge: true })
+    setAchievementXP(0)
+    await setDoc(doc(db, "users", userId), { unlockedAchievements: [], achievementXP: 0 }, { merge: true })
     setIsResetting(false)
   }
 
@@ -200,5 +220,6 @@ export function useGoals(userId) {
     getUnlockedAchievements,
     resetAchievements,
     persistedAchievements,
+    achievementXP,
   };
 }

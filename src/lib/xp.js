@@ -4,15 +4,19 @@ export const LEVELS = [
   { level: 1,  xpRequired: 0,    title: 'Rookie' },
   { level: 2,  xpRequired: 100,  title: 'Rising' },
   { level: 3,  xpRequired: 250,  title: 'Grinder' },
-  { level: 4,  xpRequired: 500,  title: 'Focused' },
-  { level: 5,  xpRequired: 900,  title: 'Driven' },
-  { level: 6,  xpRequired: 1400, title: 'Hustler' },
-  { level: 7,  xpRequired: 2000, title: 'Elite' },
-  { level: 8,  xpRequired: 2800, title: 'Legend' },
-  { level: 9,  xpRequired: 3800, title: 'Apex' },
-  { level: 10, xpRequired: 5000, title: 'Transcendent' },
-  { level: 20, xpRequired: 12000, title: 'Immortal' },
-  { level: 50, xpRequired: 40000, title: 'Ascended' },
+  { level: 4,  xpRequired: 500,  title: 'Hustler' },
+  { level: 5,  xpRequired: 900,  title: 'Boss' },
+  { level: 6,  xpRequired: 1400, title: 'Idan' },
+  { level: 7,  xpRequired: 2000, title: 'Seniorman' },
+  { level: 8,  xpRequired: 2800, title: 'Oga Boss' },
+  { level: 9,  xpRequired: 3800, title: 'Chairman' },
+  { level: 10, xpRequired: 5000, title: 'Agba' },
+  { level: 20, xpRequired: 10000, title: 'OG' },
+  {level: 25, xpRequired: 12500, title: 'Odogwu' },
+  {level: 30, xpRequired: 15000, title: 'Don' },
+  { level: 40, xpRequired: 20000, title: 'Baba Nla' },
+  { level: 50, xpRequired: 25000, title: 'Legend' },
+  {level: 100, xpRequired: 50000, title: 'Final Boss' },
 ]
 
 export const CATEGORY_TITLES = {
@@ -52,14 +56,8 @@ export function getCategoryLevel(goals, category) {
   return { score, title: titles[titleIdx], goalsCount: catGoals.length, completed }
 }
 
-export function calcTotalXP(goals) {
-  return goals.reduce((total, g) => {
-    const logs = g.logs || []
-    const logXP = logs.length * 5
-    const completionBonus = g.progress >= 100 ? 100 : 0
-    const progressXP = Math.floor((g.progress || 0) / 5) * 5
-    return total + logXP + completionBonus + progressXP
-  }, 0)
+export function calcTotalXP(goals, achievementXP = 0) {
+  return goals.reduce((total, g) => total + (g.xp || 0), 0) + achievementXP
 }
 
 // Helper: total logs across all goals

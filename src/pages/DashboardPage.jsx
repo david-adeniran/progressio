@@ -15,6 +15,7 @@ import {
   Rocket, Globe, CheckCircle, Pencil, Lock, Star,
   TrendingUp, AlertTriangle, CheckSquare, Sparkles,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const CATEGORY_COLORS = {
   Finance: "#7c6af7", Fitness: "#3ecf8e", Learning: "#f0a844",
@@ -104,7 +105,7 @@ function MotivationalBanner({ name, goals, streak }) {
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const { goals, loading, addGoal, deleteGoal, getUnlockedAchievements } = useGoals(user?.uid);
+  const { goals, loading, addGoal, deleteGoal, getUnlockedAchievements, achievementXP } = useGoals(user?.uid);
   const [showAdd, setShowAdd] = useState(false);
   const [greeting] = useState(() => GREETINGS[Math.floor(Math.random() * GREETINGS.length)]);
   const [filter, setFilter] = useState("All");
@@ -113,7 +114,7 @@ export default function DashboardPage() {
 
   const name = user?.displayName || user?.email?.split("@")[0] || "there";
   const categories = Object.keys(CATEGORY_COLORS);
-  const totalXP = calcTotalXP(goals);
+  const totalXP = calcTotalXP(goals, achievementXP);
   const levelInfo = getLevelInfo(totalXP);
   const unlockedIds = getUnlockedAchievements();
   const unlockedAchievements = ACHIEVEMENTS.filter(a => unlockedIds.has(a.id));
@@ -149,7 +150,9 @@ export default function DashboardPage() {
           <div className={styles.ccLabel}>COMMAND CENTER</div>
           <div className={styles.ccProfile}>
             <div className={styles.ccAvatar}>
-              <UserAvatar size={52} />
+              <Link to="/settings">
+                <UserAvatar size={60} />
+              </Link>
               <div className={styles.ccLevel}>Lv.{levelInfo.level}</div>
             </div>
             <div>
