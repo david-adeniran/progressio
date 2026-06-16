@@ -254,7 +254,7 @@ export default function DashboardPage() {
                       <span className={styles.catName}>{cat}</span>
                       {/* Mini ring */}
                       <div className={styles.catRing}>
-                        <svg width="48" height="48" viewBox="0 0 48 48" style={{ overflow: 'visible' }}>
+                        <svg width="48" height="48" viewBox="0 0 48 48" style={{ overflow: 'hidden' }}>
                           <circle cx="24" cy="24" r={16} fill="none" stroke="var(--surface-3)" strokeWidth="3" />
                           <circle cx="24" cy="24" r={16} fill="none" stroke={color} strokeWidth="3"
                             strokeDasharray={`${(avg / 100) * 2 * Math.PI * 16} ${2 * Math.PI * 16}`}
