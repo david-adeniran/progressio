@@ -58,6 +58,11 @@
   background-clip: text;
   letter-spacing: -0.025em;
 }
+.logoImg {
+  height: 28px;
+  width: auto;
+  object-fit: contain;
+}
 
 /* ── Nav ── */
 .nav {

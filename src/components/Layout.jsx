@@ -56,7 +56,8 @@ export default function Layout() {
       <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ""}`}>
         {/* Logo */}
         <Link to="/" className={styles.sidebarLogo}>
-          <div className={styles.logoIcon}>P</div>
+          <img src="/logo.png" alt="Progressio" className={styles.logoImg} onError={e => { e.target.style.display='none'; e.target.nextSibling.style.display='flex' }} />
+          <div className={styles.logoIcon} style={{ display: 'none' }}>P</div>
           <span className={styles.logoText}>Progressio</span>
         </Link>
 
@@ -125,7 +126,10 @@ export default function Layout() {
           <button className={styles.menuBtn} onClick={() => setSidebarOpen(v => !v)}>
             {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
-          <Link to="/" className={styles.topbarLogo}>Progressio</Link>
+          <Link to="/" className={styles.topbarLogo}>
+            <img src="/logo.png" alt="Progressio" style={{ height: 24, objectFit: 'contain' }} onError={e => { e.target.style.display='none'; e.target.parentNode.childNodes[1].style.display='inline' }} />
+            <span style={{ display: 'none' }}>Progressio</span>
+          </Link>
           <div style={{ width: 36 }} />
         </div>
 

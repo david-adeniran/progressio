@@ -4,6 +4,8 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   updateProfile,
+  sendEmailVerification,
+  sendPasswordResetEmail,
 } from "firebase/auth";
 import { auth } from "../lib/firebase";
 import styles from "./AuthPage.module.css";
@@ -31,6 +33,10 @@ export default function AuthPage() {
   const [touched, setTouched] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [showReset, setShowReset] = useState(false);
+  const [verificationSent, setVerificationSent] = useState(false);
 
   const checks = useMemo(
     () => RULES.map((r) => ({ ...r, passed: r.test(password) })),
@@ -53,12 +59,10 @@ export default function AuthPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
-        const cred = await createUserWithEmailAndPassword(
-          auth,
-          email,
-          password,
-        );
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
         await updateProfile(cred.user, { displayName: name });
+        await sendEmailVerification(cred.user);
+        setVerificationSent(true);
       } else {
         await signInWithEmailAndPassword(auth, email, password);
       }
@@ -67,6 +71,19 @@ export default function AuthPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleReset(e) {
+    e.preventDefault();
+    if (!resetEmail.trim()) return;
+    setLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, resetEmail.trim());
+      setResetSent(true);
+    } catch (err) {
+      setError(friendlyError(err.code));
+    }
+    setLoading(false);
   }
 
   function friendlyError(code) {
@@ -91,11 +108,44 @@ export default function AuthPage() {
 
   return (
     <div className={styles.page}>
+
+      {/* Password reset modal */}
+      {showReset && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, padding: '2rem', maxWidth: 380, width: '90%', textAlign: 'center' }}>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 800, color: 'var(--text)', marginBottom: '0.5rem' }}>Reset password</h2>
+            {resetSent ? (
+              <>
+                <p style={{ fontSize: '0.85rem', color: 'var(--success)', marginBottom: '1.25rem' }}>✓ Reset link sent! Check your inbox.</p>
+                <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => { setShowReset(false); setResetSent(false); setResetEmail(''); }}>Done</button>
+              </>
+            ) : (
+              <form onSubmit={handleReset}>
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '1rem', lineHeight: 1.6 }}>Enter your email and we'll send a reset link.</p>
+                <input type="email" value={resetEmail} onChange={e => setResetEmail(e.target.value)} placeholder="you@example.com" required style={{ marginBottom: '1rem' }} />
+                {error && <p style={{ fontSize: '0.78rem', color: 'var(--danger)', marginBottom: '0.75rem' }}>{error}</p>}
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button type="button" className="btn btn-ghost" style={{ flex: 1, justifyContent: 'center' }} onClick={() => { setShowReset(false); setError(''); }}>Cancel</button>
+                  <button type="submit" className="btn btn-primary" style={{ flex: 1, justifyContent: 'center' }} disabled={loading}>{loading ? 'Sending…' : 'Send link'}</button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className={styles.box}>
         <h1 className={styles.wordmark}>Progressio</h1>
         <p className={styles.sub}>
           {mode === "login" ? "Welcome back." : "Create your account."}
         </p>
+
+        {/* Email verification notice */}
+        {verificationSent && (
+          <div style={{ background: 'var(--success-dim)', border: '1px solid rgba(62,207,142,0.3)', borderRadius: 10, padding: '0.75rem 1rem', marginBottom: '1rem', fontSize: '0.82rem', color: 'var(--success)' }}>
+            ✓ Account created! Check your email to verify your address.
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className={styles.form}>
           {mode === "signup" && (
@@ -146,6 +196,15 @@ export default function AuthPage() {
               </button>
             </div>
           </div>
+
+          {mode === "login" && (
+            <div style={{ textAlign: 'right', marginTop: '-0.5rem', marginBottom: '0.5rem' }}>
+              <button type="button" onClick={() => { setShowReset(true); setError(''); setResetEmail(email); }}
+                style={{ background: 'none', border: 'none', color: 'var(--accent)', fontSize: '0.78rem', cursor: 'pointer', fontFamily: 'var(--font-body)' }}>
+                Forgot password?
+              </button>
+            </div>
+          )}
 
           {mode === "signup" && password.length > 0 && (
             <div className={styles.checklist}>
