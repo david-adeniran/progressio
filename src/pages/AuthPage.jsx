@@ -7,8 +7,14 @@ import {
   sendEmailVerification,
   sendPasswordResetEmail,
 } from "firebase/auth";
+import emailjs from "@emailjs/browser";
 import { auth } from "../lib/firebase";
 import styles from "./AuthPage.module.css";
+
+const EMAILJS_SERVICE = "service_rdx4vns";
+const EMAILJS_WELCOME = "template_b52b9xf";
+const EMAILJS_RESET = "template_vhxta0e";
+const EMAILJS_KEY = "GYshRTHCTu1Q3XOoY";
 
 const RULES = [
   { label: "One uppercase letter", test: (v) => /[A-Z]/.test(v) },
@@ -17,10 +23,6 @@ const RULES = [
   { label: "One symbol", test: (v) => /[^A-Za-z0-9]/.test(v) },
   { label: "At least 8 characters", test: (v) => v.length >= 8 },
 ];
-
-function EyeIcon({ open }) {
-  return open ? <Eye size={16} /> : <EyeOff size={16} />
-}
 
 export default function AuthPage() {
   const [mode, setMode] = useState("login");
@@ -34,13 +36,13 @@ export default function AuthPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [resetSent, setResetSent] = useState(false);
-  const [resetEmail, setResetEmail] = useState('');
+  const [resetEmail, setResetEmail] = useState("");
   const [showReset, setShowReset] = useState(false);
   const [verificationSent, setVerificationSent] = useState(false);
 
   const checks = useMemo(
     () => RULES.map((r) => ({ ...r, passed: r.test(password) })),
-    [password],
+    [password]
   );
   const allPassed = checks.every((c) => c.passed);
   const passwordsMatch = password === confirm;
@@ -50,10 +52,7 @@ export default function AuthPage() {
     setTouched(true);
     if (mode === "signup") {
       if (!allPassed) return;
-      if (!passwordsMatch) {
-        setError("Passwords do not match.");
-        return;
-      }
+      if (!passwordsMatch) { setError("Passwords do not match."); return; }
     }
     setError("");
     setLoading(true);
@@ -62,6 +61,13 @@ export default function AuthPage() {
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         await updateProfile(cred.user, { displayName: name });
         await sendEmailVerification(cred.user);
+        try {
+          await emailjs.send(
+            EMAILJS_SERVICE, EMAILJS_WELCOME,
+            { to_name: name, email, app_url: "https://progressioapp.vercel.app/" },
+            EMAILJS_KEY
+          );
+        } catch (e) { console.error("EmailJS error:", e); }
         setVerificationSent(true);
       } else {
         await signInWithEmailAndPassword(auth, email, password);
@@ -98,35 +104,45 @@ export default function AuthPage() {
 
   function switchMode() {
     setMode(mode === "login" ? "signup" : "login");
-    setError("");
-    setTouched(false);
-    setPassword("");
-    setConfirm("");
-    setShowPassword(false);
-    setShowConfirm(false);
+    setError(""); setTouched(false);
+    setPassword(""); setConfirm("");
+    setShowPassword(false); setShowConfirm(false);
   }
 
   return (
     <div className={styles.page}>
 
-      {/* Password reset modal */}
+      {/* Reset modal */}
       {showReset && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
-          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, padding: '2rem', maxWidth: 380, width: '90%', textAlign: 'center' }}>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 800, color: 'var(--text)', marginBottom: '0.5rem' }}>Reset password</h2>
+        <div className={styles.modal}>
+          <div className={styles.modalBox}>
+            <h2 className={styles.modalTitle}>Reset password</h2>
             {resetSent ? (
               <>
-                <p style={{ fontSize: '0.85rem', color: 'var(--success)', marginBottom: '1.25rem' }}>✓ Reset link sent! Check your inbox.</p>
-                <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => { setShowReset(false); setResetSent(false); setResetEmail(''); }}>Done</button>
+                <p className={styles.successNote}>Reset link sent. Check your inbox.</p>
+                <div className={styles.modalActions}>
+                  <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}
+                    onClick={() => { setShowReset(false); setResetSent(false); setResetEmail(""); }}>
+                    Done
+                  </button>
+                </div>
               </>
             ) : (
               <form onSubmit={handleReset}>
-                <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '1rem', lineHeight: 1.6 }}>Enter your email and we'll send a reset link.</p>
-                <input type="email" value={resetEmail} onChange={e => setResetEmail(e.target.value)} placeholder="you@example.com" required style={{ marginBottom: '1rem' }} />
-                {error && <p style={{ fontSize: '0.78rem', color: 'var(--danger)', marginBottom: '0.75rem' }}>{error}</p>}
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button type="button" className="btn btn-ghost" style={{ flex: 1, justifyContent: 'center' }} onClick={() => { setShowReset(false); setError(''); }}>Cancel</button>
-                  <button type="submit" className="btn btn-primary" style={{ flex: 1, justifyContent: 'center' }} disabled={loading}>{loading ? 'Sending…' : 'Send link'}</button>
+                <p className={styles.modalSub}>Enter your email and we'll send a reset link.</p>
+                <input
+                  type="email" value={resetEmail}
+                  onChange={e => setResetEmail(e.target.value)}
+                  placeholder="you@example.com" required
+                  className={styles.input}
+                  style={{ borderBottom: '1.5px solid var(--border)', display: 'block', width: '100%' }}
+                />
+                {error && <p className={styles.error}>{error}</p>}
+                <div className={styles.modalActions}>
+                  <button type="button" className="btn btn-ghost" style={{ flex: 1, justifyContent: 'center' }}
+                    onClick={() => { setShowReset(false); setError(""); }}>Cancel</button>
+                  <button type="submit" className="btn btn-primary" style={{ flex: 1, justifyContent: 'center' }}
+                    disabled={loading}>{loading ? "Sending…" : "Send link"}</button>
                 </div>
               </form>
             )}
@@ -134,92 +150,116 @@ export default function AuthPage() {
         </div>
       )}
 
-      <div className={styles.box}>
-        <h1 className={styles.wordmark}>Progressio</h1>
-        <p className={styles.sub}>
-          {mode === "login" ? "Welcome back." : "Create your account."}
-        </p>
-
-        {/* Email verification notice */}
-        {verificationSent && (
-          <div style={{ background: 'var(--success-dim)', border: '1px solid rgba(62,207,142,0.3)', borderRadius: 10, padding: '0.75rem 1rem', marginBottom: '1rem', fontSize: '0.82rem', color: 'var(--success)' }}>
-            ✓ Account created! Check your email to verify your address.
+      {/* Left — brand */}
+      <div className={styles.brand}>
+        <div className={styles.brandAccentLine} />
+        <div className={styles.brandTop}>
+          <span className={styles.brandMark}>Progressio</span>
+          <h1 className={styles.brandHeadline}>
+            Build the life<br />
+            you <em>actually</em><br />
+            want.
+          </h1>
+          <p className={styles.brandTagline}>
+            Track goals, earn XP, and watch every area of your life level up — one day at a time.
+          </p>
+        </div>
+        <div className={styles.brandBottom}>
+          <div className={styles.brandStats}>
+            <div className={styles.brandStat}>
+              <span className={styles.brandStatVal}>100</span>
+              <span className={styles.brandStatLabel}>Achievements</span>
+            </div>
+            <div className={styles.brandStat}>
+              <span className={styles.brandStatVal}>8</span>
+              <span className={styles.brandStatLabel}>Life Areas</span>
+            </div>
+            <div className={styles.brandStat}>
+              <span className={styles.brandStatVal}>10</span>
+              <span className={styles.brandStatLabel}>Levels</span>
+            </div>
           </div>
+          <p className={styles.brandQuote}>
+            "Small consistent actions lead to extraordinary results."
+          </p>
+        </div>
+      </div>
+
+      {/* Right — form */}
+      <div className={styles.formPanel}>
+        <div className={styles.formHeader}>
+          <h2 className={styles.formTitle}>
+            {mode === "login" ? "Sign in" : "Create account"}
+          </h2>
+          <p className={styles.formSub}>
+            {mode === "login"
+              ? "Enter your credentials to continue."
+              : "Start your journey with Progressio."}
+          </p>
+        </div>
+
+        {verificationSent && (
+          <p className={styles.successNote} style={{ marginBottom: '1.5rem' }}>
+            Account created. Check your email to verify your address.
+          </p>
         )}
 
         <form onSubmit={handleSubmit} className={styles.form}>
           {mode === "signup" && (
-            <div className="form-group">
-              <label>Your name</label>
+            <div className={styles.field}>
+              <label className={styles.label}>Your name</label>
               <input
+                className={styles.input}
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={e => setName(e.target.value)}
                 placeholder="Wasiu Chukwudi"
                 required
               />
             </div>
           )}
 
-          <div className="form-group">
-            <label>Email</label>
+          <div className={styles.field}>
+            <label className={styles.label}>Email</label>
             <input
+              className={styles.input}
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={e => setEmail(e.target.value)}
               placeholder="you@example.com"
               required
             />
           </div>
 
-          <div className="form-group">
-            <label>Password</label>
+          <div className={styles.field}>
+            <label className={styles.label}>Password</label>
             <div className={styles.inputWrap}>
               <input
+                className={styles.input}
                 type={showPassword ? "text" : "password"}
                 value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  setTouched(false);
-                }}
-                placeholder={
-                  mode === "signup" ? "Create a strong password" : ""
-                }
+                onChange={e => { setPassword(e.target.value); setTouched(false); }}
+                placeholder={mode === "signup" ? "Create a strong password" : "••••••••"}
                 required
               />
-              <button
-                type="button"
-                className={styles.eyeBtn}
-                onClick={() => setShowPassword((v) => !v)}
-                tabIndex={-1}
-              >
-                <EyeIcon open={showPassword} />
+              <button type="button" className={styles.eyeBtn}
+                onClick={() => setShowPassword(v => !v)} tabIndex={-1}>
+                {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>
             </div>
           </div>
 
           {mode === "login" && (
-            <div style={{ textAlign: 'right', marginTop: '-0.5rem', marginBottom: '0.5rem' }}>
-              <button type="button" onClick={() => { setShowReset(true); setError(''); setResetEmail(email); }}
-                style={{ background: 'none', border: 'none', color: 'var(--accent)', fontSize: '0.78rem', cursor: 'pointer', fontFamily: 'var(--font-body)' }}>
-                Forgot password?
-              </button>
-            </div>
+            <button type="button" className={styles.forgotBtn}
+              onClick={() => { setShowReset(true); setError(""); setResetEmail(email); }}>
+              Forgot password?
+            </button>
           )}
 
           {mode === "signup" && password.length > 0 && (
             <div className={styles.checklist}>
               {checks.map((c, i) => (
-                <div
-                  key={i}
-                  className={
-                    styles.checkItem +
-                    " " +
-                    (c.passed ? styles.checkPassed : styles.checkFailed)
-                  }
-                >
-                  <span className={styles.checkDot}>
-                    {c.passed ? "✓" : "✕"}
-                  </span>
+                <div key={i} className={`${styles.checkItem} ${c.passed ? styles.checkPassed : styles.checkFailed}`}>
+                  <span className={styles.checkDot}>{c.passed ? "✓" : "·"}</span>
                   {c.label}
                 </div>
               ))}
@@ -227,64 +267,44 @@ export default function AuthPage() {
           )}
 
           {mode === "signup" && (
-            <div className="form-group">
-              <label>Confirm password</label>
+            <div className={styles.field}>
+              <label className={styles.label}>Confirm password</label>
               <div className={styles.inputWrap}>
                 <input
+                  className={styles.input}
                   type={showConfirm ? "text" : "password"}
                   value={confirm}
-                  onChange={(e) => setConfirm(e.target.value)}
+                  onChange={e => setConfirm(e.target.value)}
                   placeholder="Re-enter your password"
                   required
-                  style={{
-                    borderColor:
-                      touched && !passwordsMatch ? "var(--danger)" : "",
-                  }}
+                  style={{ borderBottomColor: touched && !passwordsMatch ? "var(--danger)" : "" }}
                 />
-                <button
-                  type="button"
-                  className={styles.eyeBtn}
-                  onClick={() => setShowConfirm((v) => !v)}
-                  tabIndex={-1}
-                >
-                  <EyeIcon open={showConfirm} />
+                <button type="button" className={styles.eyeBtn}
+                  onClick={() => setShowConfirm(v => !v)} tabIndex={-1}>
+                  {showConfirm ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
               {touched && !passwordsMatch && (
-                <span className={styles.fieldError}>
-                  Passwords do not match.
-                </span>
+                <span className={styles.fieldError}>Passwords do not match.</span>
               )}
             </div>
           )}
 
           {error && <p className={styles.error}>{error}</p>}
 
-          <button
-            className="btn btn-primary"
-            style={{
-              width: "100%",
-              justifyContent: "center",
-              marginTop: "0.5rem",
-            }}
-            disabled={loading}
-          >
-            {loading
-              ? "Please wait…"
-              : mode === "login"
-                ? "Sign in"
-                : "Create account"}
+          <button type="submit" className={styles.submitBtn} disabled={loading}>
+            {loading ? "Please wait…" : mode === "login" ? "Sign in" : "Create account"}
           </button>
         </form>
 
-        <p className={styles.toggle}>
-          {mode === "login"
-            ? "Don't have an account? "
-            : "Already have an account? "}
-          <button onClick={switchMode}>
+        <div className={styles.toggle}>
+          <div className={styles.toggleDivider} />
+          <span>{mode === "login" ? "New here?" : "Have an account?"}</span>
+          <button className={styles.toggleBtn} onClick={switchMode}>
             {mode === "login" ? "Sign up" : "Sign in"}
           </button>
-        </p>
+          <div className={styles.toggleDivider} />
+        </div>
       </div>
     </div>
   );

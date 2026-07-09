@@ -1,4 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
+import { useState } from 'react'
+import { sendEmailVerification } from 'firebase/auth'
+import { auth } from './lib/firebase'
 import { useAuth } from './context/AuthContext'
 import AuthPage from './pages/AuthPage'
 import DashboardPage from './pages/DashboardPage'
@@ -82,10 +85,59 @@ function SplashScreen() {
   )
 }
 
+function VerificationPending() {
+  const { user } = useAuth()
+  const [resent, setResent] = useState(false)
+  const [checking, setChecking] = useState(false)
+
+  async function resendEmail() {
+    if (auth.currentUser) {
+      await sendEmailVerification(auth.currentUser)
+      setResent(true)
+      setTimeout(() => setResent(false), 4000)
+    }
+  }
+
+  async function checkVerification() {
+    setChecking(true)
+    await auth.currentUser?.reload()
+    if (auth.currentUser?.emailVerified) {
+      window.location.reload()
+    } else {
+      setChecking(false)
+    }
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--bg)', padding: '2rem', textAlign: 'center' }}>
+      <div style={{ maxWidth: 420, width: '100%' }}>
+        <div style={{ width: 64, height: 64, borderRadius: 18, background: 'linear-gradient(135deg, #7c6af7, #3ecf8e)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.8rem', color: '#fff', margin: '0 auto 1.5rem' }}>P</div>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', fontWeight: 800, color: 'var(--text)', marginBottom: '0.75rem' }}>Verify your email</h1>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', lineHeight: 1.7, marginBottom: '1.5rem' }}>
+          We sent a verification link to <strong style={{ color: 'var(--text)' }}>{user?.email}</strong>. Click it to access Progressio.
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <button className="btn btn-primary" style={{ justifyContent: 'center', width: '100%' }} onClick={checkVerification} disabled={checking}>
+            {checking ? 'Checking…' : "I've verified my email"}
+          </button>
+          <button className="btn btn-ghost" style={{ justifyContent: 'center', width: '100%' }} onClick={resendEmail} disabled={resent}>
+            {resent ? '✓ Email sent!' : 'Resend verification email'}
+          </button>
+        </div>
+        <p style={{ color: 'var(--text-dim)', fontSize: '0.75rem', marginTop: '1.5rem' }}>
+          Wrong email? <button onClick={() => { auth.signOut() }} style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontSize: '0.75rem', fontFamily: 'var(--font-body)' }}>Sign out</button>
+        </p>
+      </div>
+    </div>
+  )
+}
+
 function PrivateRoute({ children }) {
   const { user } = useAuth()
   if (user === undefined) return <SplashScreen />
-  return user ? children : <Navigate to="/auth" replace />
+  if (!user) return <Navigate to="/auth" replace />
+  if (!user.emailVerified) return <VerificationPending />
+  return children
 }
 
 export default function App() {

@@ -1,10 +1,10 @@
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useGoals } from '../hooks/useGoals'
-import { getCategoryLevel, calcTotalXP } from '../lib/xp'
+import { getCategoryLevel } from '../lib/xp'
 import {
   Wallet, Dumbbell, BookOpen, Briefcase, Heart, Plane, Leaf, Zap,
-  Trophy, TrendingUp, AlertTriangle, Flame, Award, Star,
+  Trophy, ArrowUpRight, AlertCircle, ChevronRight,
 } from 'lucide-react'
 import styles from './CategoriesPage.module.css'
 
@@ -17,33 +17,13 @@ const ICONS = {
   Finance: Wallet, Fitness: Dumbbell, Learning: BookOpen,
   Career: Briefcase, Health: Heart, Travel: Plane, Personal: Leaf, Custom: Zap,
 }
-const MEDAL_COLORS = { 1: '#f0a844', 2: '#b0b8c1', 3: '#cd7f32' }
 
 function getCatXP(goals, cat) {
   return goals
     .filter(g => g.category === cat)
     .reduce((s, g) => {
-      const logs = g.logs || []
-      return s + logs.length * 10 + (g.progress >= 100 ? 100 : 0) + Math.floor((g.progress || 0) / 10) * 5
+      return s + (g.logs || []).length * 10 + (g.progress >= 100 ? 100 : 0) + Math.floor((g.progress || 0) / 10) * 5
     }, 0)
-}
-
-function ProgressRing({ pct, color, size = 72, stroke = 5 }) {
-  const r = (size - stroke * 2) / 2
-  const circ = 2 * Math.PI * r
-  const dash = (pct / 100) * circ
-  return (
-    <div className={styles.ringWrap} style={{ width: size, height: size }}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="var(--surface-3)" strokeWidth={stroke} />
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={stroke}
-          strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
-          transform={`rotate(-90 ${size/2} ${size/2})`}
-          style={{ transition: 'stroke-dasharray 0.8s cubic-bezier(0.22,1,0.36,1)' }} />
-      </svg>
-      <span className={styles.ringPct} style={{ color, fontSize: size > 60 ? '1rem' : '0.7rem' }}>{pct}%</span>
-    </div>
-  )
 }
 
 export default function CategoriesPage() {
@@ -52,7 +32,6 @@ export default function CategoriesPage() {
   const navigate = useNavigate()
   const categories = Object.keys(CATEGORY_COLORS)
 
-  // Build category data
   const catData = categories.map(cat => {
     const color = CATEGORY_COLORS[cat]
     const Icon = ICONS[cat]
@@ -66,23 +45,15 @@ export default function CategoriesPage() {
     return { cat, color, Icon, catGoals, completed, active, avg, xp, catTitle, catLevel }
   })
 
-  // Leaderboard — top 3 by XP
+  const withGoals = catData.filter(d => d.catGoals.length > 0)
   const leaderboard = [...catData].sort((a, b) => b.xp - a.xp).slice(0, 3)
-
-  // Insights
   const mostProductive = [...catData].sort((a, b) => b.avg - a.avg)[0]
-  const highestXP = [...catData].sort((a, b) => b.xp - a.xp)[0]
-  const needsAttention = [...catData].filter(d => d.catGoals.length > 0).sort((a, b) => a.avg - b.avg)[0]
-  const mostActive = catData.find(d => d.catGoals.length > 0 && d.avg > 0) || catData[0]
+  const needsAttention = withGoals.sort((a, b) => a.avg - b.avg)[0]
   const bestCompletion = [...catData].sort((a, b) => {
-    const rateA = a.catGoals.length ? a.completed / a.catGoals.length : 0
-    const rateB = b.catGoals.length ? b.completed / b.catGoals.length : 0
-    return rateB - rateA
+    const rA = a.catGoals.length ? a.completed / a.catGoals.length : 0
+    const rB = b.catGoals.length ? b.completed / b.catGoals.length : 0
+    return rB - rA
   })[0]
-
-  const podiumOrder = leaderboard.length >= 3
-    ? [leaderboard[1], leaderboard[0], leaderboard[2]]
-    : leaderboard
 
   return (
     <div className={styles.page}>
@@ -90,239 +61,200 @@ export default function CategoriesPage() {
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Categories</h1>
-          <p className={styles.sub}>Track growth across every area of your life.</p>
+          <p className={styles.sub}>Growth across every area of your life</p>
+        </div>
+        <div className={styles.headerMeta}>
+          <span className={styles.headerMetaItem}>{goals.length} goals</span>
+          <span className={styles.headerMetaDot} />
+          <span className={styles.headerMetaItem}>{catData.filter(d => d.catGoals.length > 0).length} active areas</span>
         </div>
       </div>
 
-      {/* Top summary row */}
-      <div className={styles.summaryLabel}>TOP SUMMARY ROW</div>
-      <div className={styles.summaryRow}>
-        {catData.map(({ cat, color, Icon, catGoals, avg, xp, catLevel }) => (
-          <div key={cat} className={styles.summaryCard} style={{ '--cat-color': color }}
+      {/* Horizontal category strip */}
+      <div className={styles.strip}>
+        {catData.map(({ cat, color, Icon, catGoals, avg }) => (
+          <button key={cat} className={styles.stripItem}
             onClick={() => navigate(`/goals?category=${cat}`)}>
-            <div className={styles.summaryCardTop}>
-              <Icon size={14} color={color} strokeWidth={1.8} />
-              <span className={styles.summaryCardName}>{cat}</span>
+            <div className={styles.stripIcon} style={{ color }}>
+              <Icon size={14} strokeWidth={2} />
             </div>
-            <div className={styles.summaryCardPct} style={{ color }}>{avg}% completion</div>
-            <div className={styles.summaryCardBar}>
-              <div style={{ width: `${avg}%`, height: '100%', background: color, borderRadius: '99px', transition: 'width 0.8s ease' }} />
+            <span className={styles.stripName}>{cat}</span>
+            <div className={styles.stripBar}>
+              <div className={styles.stripBarFill} style={{ width: `${avg}%`, background: color }} />
             </div>
-            <div className={styles.summaryCardMeta}>
-              <span>XP Earned: {xp}</span>
-              <span>Goals: {catGoals.length}</span>
-              <span>Level {catLevel}</span>
-            </div>
-          </div>
+            <span className={styles.stripPct} style={{ color }}>{avg}%</span>
+          </button>
         ))}
       </div>
 
-      <div className={styles.mainLayout}>
-        <div className={styles.mainLeft}>
-          {/* Category Grid label */}
-          <div className={styles.sectionLabel}>Category Grid</div>
+      <div className={styles.layout}>
+        {/* Left — category list */}
+        <div className={styles.left}>
+          {catData.map(({ cat, color, Icon, catGoals, completed, active, avg, xp, catTitle, catLevel }) => (
+            <div key={cat} className={styles.row}>
+              {/* Color rule */}
+              <div className={styles.rowRule} style={{ background: color }} />
 
-          {/* Category Grid */}
-          <div className={styles.catGrid}>
-            {catData.map(({ cat, color, Icon, catGoals, completed, active, avg, xp, catTitle, catLevel }) => (
-              <div key={cat} className={styles.catCard} style={{ '--cat-color': color }}>
-                <div className={styles.catCardHeader}>
-                  <div className={styles.catCardIcon} style={{ background: color + '20' }}>
-                    <Icon size={18} color={color} strokeWidth={1.8} />
-                  </div>
-                  <div className={styles.catCardTitleWrap}>
-                    <span className={styles.catCardName}>{cat}</span>
-                    <span className={styles.catCardLevel} style={{ color }}>Level {catLevel} · {catTitle}</span>
-                  </div>
-                  <ProgressRing pct={avg} color={color} size={64} stroke={5} />
-                </div>
-
-                <div className={styles.catCardBody}>
-                  <div className={styles.catCardStat}>
-                    <span className={styles.catCardStatLabel}>Completion</span>
-                    <span className={styles.catCardStatVal} style={{ color }}>{avg}%</span>
-                  </div>
-                  <div className={styles.catCardStat}>
-                    <span className={styles.catCardStatLabel}>XP Earned</span>
-                    <span className={styles.catCardStatVal} style={{ color: 'var(--gold)' }}>{xp}</span>
-                  </div>
-                </div>
-
-                {catGoals.length > 0 ? (
-                  <div className={styles.catCardGoals}>
-                    <span className={styles.catCardGoalsLabel}>Goals</span>
-                    {catGoals.slice(0, 3).map(g => (
-                      <div key={g.id} className={styles.catCardGoalItem}
-                        onClick={e => { e.stopPropagation(); navigate(`/goal/${g.id}`) }}>
-                        <span className={styles.catCardGoalDot} style={{ background: color }} />
-                        <span className={styles.catCardGoalTitle}>{g.title}</span>
-                        <span className={styles.catCardGoalPct} style={{ color }}>{g.progress || 0}%</span>
+              <div className={styles.rowMain}>
+                {/* Row header */}
+                <div className={styles.rowHeader}>
+                  <div className={styles.rowLeft}>
+                    <div className={styles.rowIconWrap} style={{ color }}>
+                      <Icon size={16} strokeWidth={1.8} />
+                    </div>
+                    <div>
+                      <div className={styles.rowName}>{cat}</div>
+                      <div className={styles.rowLevel} style={{ color }}>
+                        Lv.{catLevel} · {catTitle}
                       </div>
-                    ))}
+                    </div>
+                  </div>
+                  <div className={styles.rowRight}>
+                    <div className={styles.rowStats}>
+                      <div className={styles.rowStat}>
+                        <span className={styles.rowStatVal} style={{ color }}>{avg}%</span>
+                        <span className={styles.rowStatLabel}>avg</span>
+                      </div>
+                      <div className={styles.rowStatDivider} />
+                      <div className={styles.rowStat}>
+                        <span className={styles.rowStatVal}>{catGoals.length}</span>
+                        <span className={styles.rowStatLabel}>goals</span>
+                      </div>
+                      <div className={styles.rowStatDivider} />
+                      <div className={styles.rowStat}>
+                        <span className={styles.rowStatVal} style={{ color: 'var(--gold)' }}>{xp}</span>
+                        <span className={styles.rowStatLabel}>xp</span>
+                      </div>
+                    </div>
+                    <button className={styles.rowBtn} style={{ color }}
+                      onClick={() => navigate(`/goals?category=${cat}`)}>
+                      <ArrowUpRight size={14} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Progress bar */}
+                <div className={styles.rowBarTrack}>
+                  <div className={styles.rowBarFill} style={{ width: `${avg}%`, background: color }} />
+                </div>
+
+                {/* Goals list */}
+                {catGoals.length > 0 ? (
+                  <div className={styles.goalsList}>
+                    {catGoals.slice(0, 3).map(g => {
+                      const pct = Math.min(100, Math.round(g.progress || 0))
+                      return (
+                        <div key={g.id} className={styles.goalItem}
+                          onClick={() => navigate(`/goal/${g.id}`)}>
+                          <div className={styles.goalItemBar} style={{ width: `${pct}%`, background: color + '55' }} />
+                          <span className={styles.goalItemName}>{g.title}</span>
+                          <span className={styles.goalItemPct} style={{ color }}>{pct}%</span>
+                          <ChevronRight size={12} color="var(--text-dim)" />
+                        </div>
+                      )
+                    })}
                     {catGoals.length > 3 && (
-                      <span className={styles.catCardMore}>+{catGoals.length - 3} more</span>
+                      <button className={styles.moreBtn}
+                        onClick={() => navigate(`/goals?category=${cat}`)}>
+                        +{catGoals.length - 3} more goals
+                      </button>
                     )}
                   </div>
                 ) : (
-                  <p className={styles.catCardEmpty}>No goals yet</p>
-                )}
-
-                <button
-                  className={styles.viewHubBtn}
-                  style={{ '--cat-color': color }}
-                  onClick={() => navigate(`/goals?category=${cat}`)}
-                >
-                  View Hub
-                </button>
-              </div>
-            ))}
-          </div>
-
-          {/* Category Insights */}
-          <div className={styles.sectionLabel} style={{ marginTop: '1.5rem' }}>Category Insights</div>
-          <div className={styles.insightsGrid}>
-            <div className={styles.insightCard} style={{ cursor: 'pointer' }} onClick={() => navigate(`/goals?category=${mostProductive?.cat}`)}>
-              <span className={styles.insightLabel}>Most Productive Category</span>
-              <span className={styles.insightVal}>{mostProductive?.cat || '—'}</span>
-              {mostProductive && (
-                <span className={styles.insightSub} style={{ color: CATEGORY_COLORS[mostProductive.cat] }}>
-                  {mostProductive.avg}% avg completion
-                </span>
-              )}
-            </div>
-            <div className={styles.insightCard} style={{ cursor: 'pointer' }} onClick={() => navigate(`/goals?category=${highestXP?.cat}`)}>
-              <span className={styles.insightLabel}>Highest XP Earned</span>
-              <span className={styles.insightVal}>{highestXP?.cat || '—'}</span>
-              {highestXP && (
-                <span className={styles.insightSub} style={{ color: 'var(--gold)' }}>
-                  {highestXP.xp} XP total
-                </span>
-              )}
-            </div>
-            <div className={styles.insightCard} style={{ borderColor: 'rgba(242,90,90,0.2)', background: 'rgba(242,90,90,0.04)', cursor: 'pointer' }} onClick={() => navigate(`/goals?category=${needsAttention?.cat}`)}>
-              <span className={styles.insightLabel}>Needs Attention</span>
-              <span className={styles.insightVal} style={{ color: 'var(--danger)' }}>{needsAttention?.cat || '—'}</span>
-              {needsAttention && (
-                <span className={styles.insightSub} style={{ color: 'var(--danger)' }}>
-                  Only {needsAttention.avg}% complete
-                </span>
-              )}
-            </div>
-            <div className={styles.insightCard}>
-              <span className={styles.insightLabel}>Goals Across Categories</span>
-              <div className={styles.miniBarChart}>
-                {catData.filter(d => d.catGoals.length > 0).map(({ cat, color, catGoals }) => (
-                  <div key={cat} className={styles.miniBar} title={`${cat}: ${catGoals.length}`}>
-                    <div className={styles.miniBarFill}
-                      style={{ height: `${Math.min(100, catGoals.length * 20)}%`, background: color }} />
-                    <span className={styles.miniBarLabel}>{cat.slice(0, 3)}</span>
+                  <div className={styles.emptyRow}>
+                    No goals in this category yet
                   </div>
-                ))}
+                )}
               </div>
             </div>
-            <div className={styles.insightCard} style={{ cursor: 'pointer' }} onClick={() => navigate(`/goals?category=${bestCompletion?.cat}`)}>
-              <span className={styles.insightLabel}>Best Completion Rate</span>
-              <span className={styles.insightVal}>
-                {bestCompletion?.catGoals.length
-                  ? `${Math.round((bestCompletion.completed / bestCompletion.catGoals.length) * 100)}%`
-                  : '—'}
-              </span>
-              {bestCompletion?.catGoals.length > 0 && (
-                <span className={styles.insightSub} style={{ color: CATEGORY_COLORS[bestCompletion.cat] }}>
-                  {bestCompletion.cat}
-                </span>
-              )}
-            </div>
-            <div className={styles.insightCard} style={{ cursor: 'pointer' }} onClick={() => navigate(`/goals?category=${highestXP?.cat}`)}>
-              <span className={styles.insightLabel}>Highest XP Category</span>
-              <span className={styles.insightVal} style={{ color: 'var(--gold)' }}>
-                {highestXP?.xp ? `${highestXP.xp} XP` : '—'}
-              </span>
-              {highestXP && (
-                <span className={styles.insightSub}>{highestXP.cat}</span>
-              )}
-            </div>
-          </div>
+          ))}
         </div>
 
-        {/* Right Panel */}
-        <div className={styles.rightPanel}>
+        {/* Right — sidebar */}
+        <div className={styles.right}>
           {/* Leaderboard */}
-          <div className={styles.leaderboard}>
-            <div className={styles.leaderboardTitle}>
-              <Trophy size={14} color="var(--gold)" />
-              Category Leaderboard
+          <div className={styles.panel}>
+            <div className={styles.panelHeader}>
+              <Trophy size={13} color="var(--gold)" />
+              <span className={styles.panelTitle}>Category ranking</span>
             </div>
-            <p className={styles.leaderboardSub}>XP ranking:</p>
-
-            <div className={styles.podium}>
-              {podiumOrder.map((d, i) => {
-                const rank = i === 0 ? 2 : i === 1 ? 1 : 3
-                const Icon = ICONS[d.cat]
-                return (
-                  <div key={d.cat} className={`${styles.podiumItem} ${rank === 1 ? styles.podiumFirst : ''}`}>
-                    <div className={styles.podiumMedal}>
-                      {rank === 1 && <Trophy size={28} color={MEDAL_COLORS[1]} strokeWidth={1.8} />}
-                      {rank === 2 && <Award size={28} color={MEDAL_COLORS[2]} strokeWidth={1.8} />}
-                      {rank === 3 && <Star size={28} color={MEDAL_COLORS[3]} strokeWidth={1.8} />}
-                    </div>
-                    <div className={styles.podiumIconWrap} style={{ background: d.color + '22', border: `2px solid ${d.color}44` }}>
-                      <Icon size={18} color={d.color} strokeWidth={1.8} />
-                    </div>
-                    <span className={styles.podiumRank} style={{ background: d.color, color: '#fff' }}>{rank}</span>
-                    <span className={styles.podiumName}>{d.cat}</span>
-                    <span className={styles.podiumXP} style={{ color: d.color }}>{d.xp} XP</span>
+            <div className={styles.rankList}>
+              {leaderboard.map(({ cat, color, Icon, xp }, i) => (
+                <div key={cat} className={styles.rankItem}
+                  onClick={() => navigate(`/goals?category=${cat}`)}>
+                  <span className={styles.rankNum}
+                    style={{ color: i === 0 ? 'var(--gold)' : i === 1 ? '#b0b8c1' : '#cd7f32' }}>
+                    {i + 1}
+                  </span>
+                  <div className={styles.rankIcon} style={{ color }}>
+                    <Icon size={13} strokeWidth={1.8} />
                   </div>
-                )
-              })}
+                  <span className={styles.rankName}>{cat}</span>
+                  <span className={styles.rankXP} style={{ color: 'var(--gold)' }}>{xp} XP</span>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Right insights */}
-          <div className={styles.rightInsights}>
-            <div className={styles.rightInsightItem}>
-              <span className={styles.rightInsightLabel}>Most active category</span>
-              {mostActive && (
-                <div className={styles.rightInsightContent}>
-                  <span style={{ color: CATEGORY_COLORS[mostActive.cat], fontWeight: 600, fontSize: '0.82rem' }}>
-                    {mostActive.cat}
-                  </span>
-                  <div style={{ marginTop: '4px' }}>
-                    {mostActive.catGoals.slice(0, 2).map(g => (
-                      <div key={g.id} className={styles.rightInsightGoal}
-                        onClick={() => navigate(`/goal/${g.id}`)}>
-                        · {g.title}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+          {/* Insights */}
+          <div className={styles.panel}>
+            <div className={styles.panelHeader}>
+              <span className={styles.panelTitle}>Insights</span>
             </div>
 
-            <div className={styles.rightInsightItem}>
-              <span className={styles.rightInsightLabel}>Current streak category</span>
-              {mostActive && (
-                <div className={styles.rightInsightContent}>
-                  {mostActive.catGoals.slice(0, 2).map(g => (
-                    <div key={g.id} className={styles.rightInsightGoal}
-                      onClick={() => navigate(`/goal/${g.id}`)}>
-                      · {g.title}
+            <div className={styles.insightList}>
+              <div className={styles.insightItem}
+                onClick={() => navigate(`/goals?category=${mostProductive?.cat}`)}>
+                <span className={styles.insightKey}>Most productive</span>
+                <div className={styles.insightVal}>
+                  <span style={{ color: CATEGORY_COLORS[mostProductive?.cat] }}>
+                    {mostProductive?.cat || '—'}
+                  </span>
+                  <span className={styles.insightSub}>{mostProductive?.avg}% avg</span>
+                </div>
+              </div>
+
+              <div className={styles.insightItem}
+                onClick={() => navigate(`/goals?category=${needsAttention?.cat}`)}>
+                <div className={styles.insightKeyWrap}>
+                  <AlertCircle size={11} color="var(--danger)" />
+                  <span className={styles.insightKey}>Needs attention</span>
+                </div>
+                <div className={styles.insightVal}>
+                  <span style={{ color: 'var(--danger)' }}>{needsAttention?.cat || '—'}</span>
+                  <span className={styles.insightSub}>{needsAttention?.avg}% complete</span>
+                </div>
+              </div>
+
+              <div className={styles.insightItem}
+                onClick={() => navigate(`/goals?category=${bestCompletion?.cat}`)}>
+                <span className={styles.insightKey}>Best completion</span>
+                <div className={styles.insightVal}>
+                  <span style={{ color: CATEGORY_COLORS[bestCompletion?.cat] }}>
+                    {bestCompletion?.catGoals.length
+                      ? `${Math.round((bestCompletion.completed / bestCompletion.catGoals.length) * 100)}%`
+                      : '—'}
+                  </span>
+                  <span className={styles.insightSub}>{bestCompletion?.cat}</span>
+                </div>
+              </div>
+
+              {/* Mini bar chart */}
+              <div className={styles.insightItem} style={{ flexDirection: 'column', gap: 8, cursor: 'default' }}>
+                <span className={styles.insightKey}>Goals by area</span>
+                <div className={styles.miniChart}>
+                  {catData.filter(d => d.catGoals.length > 0).map(({ cat, color, catGoals }) => (
+                    <div key={cat} className={styles.miniChartRow}>
+                      <span className={styles.miniChartLabel}>{cat.slice(0, 3)}</span>
+                      <div className={styles.miniChartTrack}>
+                        <div className={styles.miniChartFill}
+                          style={{ width: `${Math.min(100, catGoals.length * 20)}%`, background: color }} />
+                      </div>
+                      <span className={styles.miniChartVal}>{catGoals.length}</span>
                     </div>
                   ))}
                 </div>
-              )}
-            </div>
-
-            <div className={styles.rightInsightItem}>
-              <span className={styles.rightInsightLabel}>Best completion rate</span>
-              {bestCompletion?.catGoals.length > 0 && (
-                <div className={styles.rightInsightContent}>
-                  <span className={styles.rightInsightBig} style={{ color: CATEGORY_COLORS[bestCompletion.cat] }}>
-                    {Math.round((bestCompletion.completed / bestCompletion.catGoals.length) * 100)}%
-                  </span>
-                  <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}> · {bestCompletion.cat}</span>
-                </div>
-              )}
+              </div>
             </div>
           </div>
         </div>

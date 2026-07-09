@@ -1,78 +1,171 @@
+/* ── Page ── */
 .page {
   min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.5rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   background: var(--bg);
 }
 
-.box {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 2.5rem 2rem;
-  width: 100%;
-  max-width: 400px;
+/* ── Left panel — brand ── */
+.brand {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 3rem;
+  border-right: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
 }
 
-.wordmark {
+.brandTop { display: flex; flex-direction: column; gap: 0; }
+
+.brandMark {
   font-family: var(--font-display);
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--accent);
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text);
   letter-spacing: -0.03em;
-  margin-bottom: 4px;
+  margin-bottom: 3rem;
 }
 
-.sub {
+.brandHeadline {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 3.5vw, 3rem);
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+  margin-bottom: 1.25rem;
+}
+
+.brandHeadline em {
+  font-style: normal;
+  color: var(--accent);
+}
+
+.brandTagline {
   font-size: 0.9rem;
   color: var(--text-muted);
-  margin-bottom: 1.75rem;
+  line-height: 1.7;
+  max-width: 340px;
 }
 
-.form { display: flex; flex-direction: column; }
+.brandBottom {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
 
-.error {
+.brandStats {
+  display: flex;
+  gap: 2rem;
+}
+
+.brandStat { display: flex; flex-direction: column; gap: 3px; }
+
+.brandStatVal {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.03em;
+}
+
+.brandStatLabel {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+
+.brandQuote {
   font-size: 0.8rem;
-  color: var(--danger);
-  background: var(--danger-dim);
-  padding: 0.5rem 0.75rem;
-  border-radius: var(--radius-sm);
-  margin-bottom: 0.5rem;
+  color: var(--text-dim);
+  line-height: 1.6;
+  border-left: 2px solid var(--accent);
+  padding-left: 0.85rem;
+  max-width: 320px;
 }
 
-.toggle {
-  margin-top: 1.25rem;
+/* Vertical accent line */
+.brandAccentLine {
+  position: absolute;
+  top: 3rem;
+  right: -1px;
+  width: 2px;
+  height: 80px;
+  background: var(--accent);
+}
+
+/* ── Right panel — form ── */
+.formPanel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 3rem;
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.formHeader {
+  margin-bottom: 2.5rem;
+}
+
+.formTitle {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.03em;
+  margin-bottom: 0.35rem;
+}
+
+.formSub {
   font-size: 0.85rem;
   color: var(--text-muted);
-  text-align: center;
 }
 
-.toggle button {
-  background: none;
-  border: none;
-  color: var(--accent);
-  font-size: 0.85rem;
-  cursor: pointer;
-  padding: 0;
-  font-family: var(--font-body);
+/* ── Form elements ── */
+.form { display: flex; flex-direction: column; gap: 1.1rem; }
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+
+.label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
-.toggle button:hover { color: var(--accent-hover); }
+
+.input {
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid var(--border);
+  border-radius: 0;
+  padding: 0.6rem 0;
+  color: var(--text);
+  font-size: 0.95rem;
+  font-family: var(--font-body);
+  width: 100%;
+  transition: border-color 0.2s;
+  outline: none;
+}
+.input:focus { border-color: var(--accent); }
+.input::placeholder { color: var(--text-dim); font-size: 0.875rem; }
 
 .inputWrap {
   position: relative;
   display: flex;
   align-items: center;
 }
-
-.inputWrap input {
-  padding-right: 2.5rem;
-}
+.inputWrap .input { padding-right: 2rem; }
 
 .eyeBtn {
   position: absolute;
-  right: 10px;
+  right: 0;
   background: none;
   border: none;
   color: var(--text-dim);
@@ -80,41 +173,158 @@
   display: flex;
   align-items: center;
   padding: 4px;
-  border-radius: var(--radius-sm);
   transition: color 0.15s;
 }
 .eyeBtn:hover { color: var(--text-muted); }
 
+/* ── Password checklist ── */
 .checklist {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  margin: -4px 0 12px;
-  padding: 10px 12px;
-  background: var(--surface-2);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
+  gap: 5px;
+  padding: 0.75rem 0;
 }
-
 .checkItem {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
 }
-
 .checkDot {
-  font-size: 0.7rem;
   width: 14px;
+  font-size: 0.65rem;
   text-align: center;
   flex-shrink: 0;
 }
-
 .checkPassed { color: var(--success); }
 .checkFailed { color: var(--text-dim); }
 
-.fieldError {
+/* ── Actions ── */
+.submitBtn {
+  margin-top: 0.5rem;
+  width: 100%;
+  padding: 0.75rem;
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  font-family: var(--font-body);
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: opacity 0.15s, transform 0.15s;
+}
+.submitBtn:hover { opacity: 0.88; }
+.submitBtn:active { transform: scale(0.99); }
+.submitBtn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.forgotBtn {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  cursor: pointer;
+  font-family: var(--font-body);
+  text-align: right;
+  padding: 0;
+  transition: color 0.15s;
+  align-self: flex-end;
+  margin-top: -0.5rem;
+}
+.forgotBtn:hover { color: var(--text-muted); }
+
+/* ── Error / success ── */
+.error {
   font-size: 0.78rem;
   color: var(--danger);
-  margin-top: 4px;
+  padding: 0.5rem 0;
+}
+.fieldError {
+  font-size: 0.72rem;
+  color: var(--danger);
+  margin-top: 3px;
+}
+.successNote {
+  font-size: 0.78rem;
+  color: var(--success);
+  padding: 0.6rem 0.85rem;
+  border: 1px solid rgba(62,207,142,0.25);
+  border-radius: 6px;
+  background: var(--success-dim);
+}
+
+/* ── Toggle ── */
+.toggle {
+  margin-top: 2rem;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.toggleDivider {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.toggleBtn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-body);
+  padding: 0;
+  white-space: nowrap;
+}
+.toggleBtn:hover { opacity: 0.75; }
+
+/* ── Reset modal ── */
+.modal {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  padding: 1rem;
+}
+.modalBox {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 2rem;
+  max-width: 360px;
+  width: 100%;
+}
+.modalTitle {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.02em;
+}
+.modalSub {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 1.25rem;
+}
+.modalActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 1rem;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .page { grid-template-columns: 1fr; }
+  .brand { display: none; }
+  .formPanel {
+    padding: 2rem 1.5rem;
+    justify-content: flex-start;
+    padding-top: 3rem;
+    max-width: 100%;
+  }
 }
