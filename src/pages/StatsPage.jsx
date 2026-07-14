@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useGoals } from '../hooks/useGoals'
 import { calcTotalXP, getLevelInfo, ACHIEVEMENTS, LEVELS } from '../lib/xp'
-import { X, Flame, Zap, Trophy, TrendingUp, Target, BarChart2 } from 'lucide-react'
+import { X, Flame, Zap, Trophy, TrendingUp, Target } from 'lucide-react'
 import styles from './StatsPage.module.css'
 
 const CATEGORY_COLORS = {
@@ -336,7 +336,7 @@ function StreakTimeline({ goals }) {
 }
 
 // ─── Goal Table ───────────────────────────────────────────────────────────────
-function GoalTable({ goals }) {
+function GoalTable({ goals, navigate }) {
   if (!goals.length) return <p className={styles.noData}>No goals yet</p>
   return (
     <div className={styles.tableWrap}>
@@ -352,7 +352,7 @@ function GoalTable({ goals }) {
             const color = CATEGORY_COLORS[g.category] || '#aaa'
             const isComplete = pct >= 100
             return (
-              <tr key={g.id}>
+              <tr key={g.id} onClick={() => navigate && navigate(`/goal/${g.id}`)} style={{ cursor: navigate ? "pointer" : "default" }}>
                 <td className={styles.tdName}>{g.title}</td>
                 <td>
                   <div className={styles.tablePctRow}>
@@ -575,14 +575,33 @@ export default function StatsPage() {
 
   const periodLabel = timeFilter === 'All Time' ? 'all time' : `this ${timeFilter.toLowerCase()}`
 
+  // Sharp single insight — what matters most right now
+  const sharpInsight = useMemo(() => {
+    if (!goals.length) return null
+    if (insights.needsAttn && insights.needsAttn.avg < 30) {
+      return { type: 'warn', text: `${insights.needsAttn.cat} is at ${insights.needsAttn.avg}% — it's been sitting there. Time to move it.` }
+    }
+    if (currentStreak >= 7) {
+      return { type: 'good', text: `${currentStreak} days straight. That's not a coincidence anymore — that's a habit.` }
+    }
+    if (insights.best && insights.best.avg > 70) {
+      return { type: 'good', text: `${insights.best.cat} is your strongest area at ${insights.best.avg}%. Build on it.` }
+    }
+    if (completionRate === 0 && goals.length > 0) {
+      return { type: 'warn', text: `You've created ${goals.length} goal${goals.length !== 1 ? 's' : ''} but haven't completed any yet. Pick one and finish it.` }
+    }
+    return { type: 'neutral', text: `${totalLogs} entries logged. Keep the consistency going.` }
+  }, [goals, insights, currentStreak, completionRate, totalLogs])
+
   return (
     <div className={styles.page}>
       {showLevels && <LevelsModal onClose={() => setShowLevels(false)} totalXP={totalXP} levelInfo={levelInfo} />}
 
+      {/* Header */}
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Statistics</h1>
-          <p className={styles.sub}>Track your growth, habits, consistency, and performance over time.</p>
+          <p className={styles.sub}>{timeFilter === 'All Time' ? 'All time' : `This ${timeFilter.toLowerCase()}`} · {goals.length} goals · {totalLogs} entries</p>
         </div>
         <div className={styles.timeFilters}>
           {TIME_FILTERS.map(f => (
@@ -591,100 +610,106 @@ export default function StatsPage() {
         </div>
       </div>
 
-      {/* Metrics */}
+      {/* Sharp insight callout — one thing worth knowing */}
+      {sharpInsight && (
+        <div className={styles.callout} style={{ borderColor: sharpInsight.type === 'warn' ? 'rgba(242,90,90,0.25)' : sharpInsight.type === 'good' ? 'rgba(62,207,142,0.25)' : 'var(--border)' }}>
+          <div className={styles.calloutDot} style={{ background: sharpInsight.type === 'warn' ? 'var(--danger)' : sharpInsight.type === 'good' ? 'var(--success)' : 'var(--text-dim)' }} />
+          <p className={styles.calloutText}>{sharpInsight.text}</p>
+        </div>
+      )}
+
+      {/* Metrics strip */}
       <div className={styles.metricsRow}>
-        {[
-          { label: 'Total XP', value: totalXP.toLocaleString(), color: 'var(--gold)', sub: `+${periodXP} XP ${periodLabel}`, icon: <Zap size={18} color='var(--gold)' />, onClick: () => setShowLevels(true) },
-          { label: 'Goals Completed', value: completed, color: 'var(--success)', sub: `${completionRate}% completion rate`, icon: <Trophy size={18} color='var(--success)' />, onClick: () => navigate('/goals?filter=completed') },
-          { label: 'Current Streak', value: `${currentStreak}d`, color: '#f0a844', sub: `Best: ${bestStreak} days`, icon: <Flame size={18} color='#f0a844' />, onClick: null },
-          { label: 'Completion Rate', value: `${completionRate}%`, color: 'var(--blue)', sub: `${goals.length} total goals`, icon: <TrendingUp size={18} color='var(--blue)' />, onClick: null },
-          { label: 'Level', value: `Lv.${levelInfo.level}`, color: 'var(--accent)', sub: levelInfo.title, icon: <Target size={18} color='var(--accent)' />, onClick: () => setShowLevels(true) },
-        ].map(m => (
-          <div key={m.label} className={styles.metricCard} onClick={m.onClick || undefined} style={{ cursor: m.onClick ? 'pointer' : 'default' }}>
-            <div className={styles.metricIcon} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, borderRadius: 10, background: "var(--surface-2)", border: "1px solid var(--border)", marginBottom: 8 }}>{m.icon}</div>
-            <div className={styles.metricLabel}>{m.label}</div>
-            <div className={styles.metricVal} style={{ color: m.color }}>{m.value}</div>
-            <div className={styles.metricSub}>{m.sub}</div>
-          </div>
-        ))}
+        <div className={styles.metricCard} onClick={() => setShowLevels(true)} style={{ cursor: 'pointer' }}>
+          <div className={styles.metricLabel}>Total XP</div>
+          <div className={styles.metricVal} style={{ color: 'var(--gold)' }}>{totalXP.toLocaleString()}</div>
+          <div className={styles.metricSub}>+{periodXP} {periodLabel}</div>
+        </div>
+        <div className={styles.metricDivider} />
+        <div className={styles.metricCard} onClick={() => navigate('/goals')} style={{ cursor: 'pointer' }}>
+          <div className={styles.metricLabel}>Completed</div>
+          <div className={styles.metricVal} style={{ color: 'var(--success)' }}>{completed}</div>
+          <div className={styles.metricSub}>{completionRate}% of all goals</div>
+        </div>
+        <div className={styles.metricDivider} />
+        <div className={styles.metricCard}>
+          <div className={styles.metricLabel}>Streak</div>
+          <div className={styles.metricVal} style={{ color: '#f0a844' }}>{currentStreak}d</div>
+          <div className={styles.metricSub}>Best: {bestStreak}d</div>
+        </div>
+        <div className={styles.metricDivider} />
+        <div className={styles.metricCard}>
+          <div className={styles.metricLabel}>Avg Progress</div>
+          <div className={styles.metricVal} style={{ color: 'var(--blue)' }}>{avgProgress}%</div>
+          <div className={styles.metricSub}>{goals.length} goals</div>
+        </div>
+        <div className={styles.metricDivider} />
+        <div className={styles.metricCard} onClick={() => setShowLevels(true)} style={{ cursor: 'pointer' }}>
+          <div className={styles.metricLabel}>Level</div>
+          <div className={styles.metricVal} style={{ color: 'var(--accent)' }}>Lv.{levelInfo.level}</div>
+          <div className={styles.metricSub}>{levelInfo.title}</div>
+        </div>
       </div>
 
       <div className={styles.mainGrid}>
         <div className={styles.leftCol}>
+
+          {/* Goal breakdown FIRST — most actionable */}
           <div className={styles.chartCard}>
             <div className={styles.chartHead}>
-              <h3 className={styles.chartTitle}>XP Growth — {timeFilter}</h3>
-              <span className={styles.chartBadge} style={{ color: 'var(--success)' }}>+{periodXP} XP</span>
+              <h3 className={styles.chartTitle}>Your goals</h3>
+              <span className={styles.chartBadge}>{completed}/{goals.length} complete</span>
+            </div>
+            <GoalTable goals={goals} navigate={navigate} />
+          </div>
+
+          {/* XP over time */}
+          <div className={styles.chartCard}>
+            <div className={styles.chartHead}>
+              <h3 className={styles.chartTitle}>XP over time</h3>
+              <span className={styles.chartBadge}>{timeFilter}</span>
             </div>
             <LineChart data={xpGrowthData} color="#7c6af7" label="xp" />
           </div>
 
-          <div className={styles.twoCol}>
-            <div className={styles.chartCard}>
-              <div className={styles.chartHead}><h3 className={styles.chartTitle}>Goal Completion Trend</h3></div>
-              <BarChart data={completionTrendData} color="#7c6af7" />
-            </div>
-            <div className={styles.chartCard}>
-              <div className={styles.chartHead}><h3 className={styles.chartTitle}>Goals by Category</h3></div>
-              <DonutChart goals={goals} />
-            </div>
-          </div>
-
+          {/* Activity grid */}
           <div className={styles.chartCard}>
             <div className={styles.chartHead}>
-              <h3 className={styles.chartTitle}>Daily Activity — Last 15 Weeks</h3>
+              <h3 className={styles.chartTitle}>Activity</h3>
+              <span className={styles.chartBadge}>Last 15 weeks</span>
             </div>
             <ActivityGrid goals={goals} />
           </div>
 
-          <div className={styles.chartCard}>
-            <div className={styles.chartHead}>
-              <h3 className={styles.chartTitle}>Goal Breakdown</h3>
-              <span className={styles.chartBadge}>{goals.length} goals</span>
+          {/* Completion trend + category split */}
+          <div className={styles.twoCol}>
+            <div className={styles.chartCard}>
+              <div className={styles.chartHead}><h3 className={styles.chartTitle}>Completion trend</h3></div>
+              <BarChart data={completionTrendData} color="#7c6af7" />
             </div>
-            <GoalTable goals={goals} />
+            <div className={styles.chartCard}>
+              <div className={styles.chartHead}><h3 className={styles.chartTitle}>By category</h3></div>
+              <DonutChart goals={goals} />
+            </div>
           </div>
 
-          <div className={styles.chartCard}>
-            <h3 className={styles.chartTitle} style={{ marginBottom: '1rem' }}>Performance Insights</h3>
-            <div className={styles.insightsGrid}>
-              <div className={styles.insightCard} style={{ borderColor: 'rgba(62,207,142,0.25)', background: 'rgba(62,207,142,0.05)' }}>
-                <div className={styles.insightTag} style={{ color: '#3ecf8e' }}>Best Category</div>
-                <div className={styles.insightVal}>{insights.best ? insights.best.cat : '—'}</div>
-                <div className={styles.insightSub}>{insights.best ? `${insights.best.avg}% avg` : 'Add goals'}</div>
-              </div>
-              <div className={styles.insightCard} style={{ borderColor: 'rgba(240,168,68,0.25)', background: 'rgba(240,168,68,0.05)' }}>
-                <div className={styles.insightTag} style={{ color: '#f0a844' }}>Needs Attention</div>
-                <div className={styles.insightVal}>{insights.needsAttn ? insights.needsAttn.cat : '—'}</div>
-                <div className={styles.insightSub}>{insights.needsAttn ? `${insights.needsAttn.avg}% avg` : 'All on track!'}</div>
-              </div>
-              <div className={styles.insightCard} style={{ borderColor: 'rgba(74,184,245,0.25)', background: 'rgba(74,184,245,0.05)' }}>
-                <div className={styles.insightTag} style={{ color: '#4ab8f5' }}>Most Active Week</div>
-                <div className={styles.insightVal}>{insights.consistentWeek ? insights.consistentWeek[0].split('-').slice(-1)[0] : '—'}</div>
-                <div className={styles.insightSub}>{insights.consistentWeek ? `${insights.consistentWeek[1]} logs` : 'Start logging'}</div>
-              </div>
-              <div className={styles.insightCard} style={{ borderColor: 'rgba(184,160,247,0.25)', background: 'rgba(184,160,247,0.05)' }}>
-                <div className={styles.insightTag} style={{ color: '#b8a0f7' }}>Biggest XP Month</div>
-                <div className={styles.insightVal}>{insights.biggestMonth ? `+${insights.biggestMonth[1]} XP` : '—'}</div>
-                <div className={styles.insightSub}>{insights.biggestMonth ? monthLabel(insights.biggestMonth[0]) : 'No logs yet'}</div>
-              </div>
-            </div>
-          </div>
         </div>
 
         <div className={styles.rightCol}>
+
+          {/* Streak */}
           <div className={styles.chartCard}>
-            <div className={styles.chartHead}><h3 className={styles.chartTitle}>Streak Analytics</h3></div>
+            <div className={styles.chartHead}><h3 className={styles.chartTitle}>Streak</h3></div>
             <StreakTimeline goals={goals} />
           </div>
 
+          {/* Achievements — concise */}
           <div className={styles.chartCard}>
-            <div className={styles.chartHead}><h3 className={styles.chartTitle}>Achievement Analytics</h3></div>
-            <div className={styles.achOverall}>
-              <span className={styles.achFraction}><strong style={{ color: 'var(--gold)' }}>{unlocked.length}</strong> / {ACHIEVEMENTS.length}</span>
-              <span className={styles.achLabel}>Earned</span>
+            <div className={styles.chartHead}>
+              <h3 className={styles.chartTitle}>Achievements</h3>
+              <span className={styles.chartBadge}>{unlocked.length}/{ACHIEVEMENTS.length}</span>
             </div>
-            <div className={styles.achBar}>
+            <div className={styles.achBar} style={{ marginBottom: '0.85rem' }}>
               <div className={styles.achBarFill} style={{ width: `${Math.round((unlocked.length / ACHIEVEMENTS.length) * 100)}%` }} />
             </div>
             <div className={styles.raritySection}>
@@ -700,14 +725,25 @@ export default function StatsPage() {
             </div>
           </div>
 
-          <div className={styles.chartCard} style={{ background: 'linear-gradient(135deg, rgba(124,106,247,0.08), rgba(62,207,142,0.05))', borderColor: 'rgba(124,106,247,0.18)' }}>
-            <h3 className={styles.chartTitle} style={{ marginBottom: '0.75rem' }}>Growth Summary</h3>
-            <p className={styles.growthText}>
-              {timeFilter === 'All Time' ? 'Overall' : `This ${timeFilter.toLowerCase()}`}, you've completed <strong style={{ color: 'var(--success)' }}>{completed} goal{completed !== 1 ? 's' : ''}</strong>, earned <strong style={{ color: 'var(--gold)' }}>{periodXP.toLocaleString()} XP</strong>, and logged <strong style={{ color: 'var(--blue)' }}>{totalLogs} entr{totalLogs !== 1 ? 'ies' : 'y'}</strong>.
-              {avgProgress > 0 && <> Average progress at <strong style={{ color: 'var(--accent)' }}>{avgProgress}%</strong>.</>}
-              {' '}{completed === 0 ? 'Start logging to build momentum.' : completed < 3 ? 'Keep pushing.' : 'You\'re on a serious run.'}
-            </p>
+          {/* Two focused callouts */}
+          <div className={styles.calloutPair}>
+            <div className={styles.focusBlock}>
+              <div className={styles.focusLabel}>Strongest area</div>
+              <div className={styles.focusVal} style={{ color: insights.best ? CATEGORY_COLORS[insights.best.cat] : 'var(--text-dim)' }}>
+                {insights.best?.cat || '—'}
+              </div>
+              <div className={styles.focusSub}>{insights.best ? `${insights.best.avg}% avg progress` : 'Add goals to see'}</div>
+            </div>
+            <div className={styles.focusDivider} />
+            <div className={styles.focusBlock}>
+              <div className={styles.focusLabel}>Needs work</div>
+              <div className={styles.focusVal} style={{ color: insights.needsAttn ? 'var(--danger)' : 'var(--text-dim)' }}>
+                {insights.needsAttn?.cat || '—'}
+              </div>
+              <div className={styles.focusSub}>{insights.needsAttn ? `${insights.needsAttn.avg}% avg progress` : 'All on track'}</div>
+            </div>
           </div>
+
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-# GoalTrack
+# Progressio
 
 A personal goal tracker — any type of goal, fully private per user, deployable to Vercel.
 

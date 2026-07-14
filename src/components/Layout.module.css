@@ -1,190 +1,128 @@
-/* ── Shell ── */
-.shell {
-  display: flex;
-  min-height: 100vh;
-  position: relative;
-  z-index: 1;
-}
+.shell { display: flex; min-height: 100vh; position: relative; z-index: 1; }
 
 /* ── Sidebar ── */
 .sidebar {
-  width: 220px;
-  flex-shrink: 0;
-  background: var(--surface);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  overflow-y: auto;
-  z-index: 30;
-  transition: transform 0.25s ease;
+  width: 216px; flex-shrink: 0;
+  background: var(--surface); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  z-index: 30; transition: transform 0.25s ease;
 }
-
-.overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.6);
-  z-index: 25;
-}
+.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 25; }
 
 /* ── Logo ── */
 .sidebarLogo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 1.25rem 1rem 1rem;
-  border-bottom: 1px solid var(--border);
-  text-decoration: none;
+  display: flex; align-items: center; gap: 9px;
+  padding: 1.1rem 1rem; border-bottom: 1px solid var(--border);
+  text-decoration: none; flex-shrink: 0;
 }
 .logoIcon {
-  width: 26px; height: 26px;
-  border-radius: 4px;
+  width: 24px; height: 24px; border-radius: 4px;
   background: var(--accent);
   display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-display);
-  font-weight: 800; font-size: 0.85rem; color: #0a0a0a;
+  font-family: var(--font-display); font-weight: 800; font-size: 0.8rem; color: #fff;
   flex-shrink: 0;
 }
-.logoText {
-  font-family: var(--font-display);
-  font-size: 0.92rem; font-weight: 700;
-  color: var(--text);
-  letter-spacing: -0.02em;
-}
-.logoImg {
-  height: 26px;
-  width: auto;
-  object-fit: contain;
-}
+.logoText { font-family: var(--font-display); font-size: 0.88rem; font-weight: 700; color: var(--text); letter-spacing: -0.025em; }
+.logoImg { height: 24px; width: auto; object-fit: contain; }
 
 /* ── Nav ── */
-.nav {
-  flex: 1;
-  padding: 0.5rem 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
+.nav { flex: 1; padding: 0.6rem 0.5rem; display: flex; flex-direction: column; gap: 1px; }
+.navDivider { height: 1px; background: var(--border); margin: 0.5rem 0.25rem; }
 .navItem {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 0.5rem 1rem;
-  color: var(--text-muted);
-  font-size: 0.82rem;
-  font-weight: 450;
+  display: flex; align-items: center; gap: 8px;
+  padding: 0.45rem 0.65rem;
+  color: var(--text-dim); font-size: 0.82rem; font-weight: 400;
   text-decoration: none;
-  transition: color 0.1s, background 0.1s;
-  position: relative;
-  letter-spacing: -0.01em;
-  border-radius: 0;
+  transition: color 0.12s, background 0.12s;
+  position: relative; border-radius: 6px; letter-spacing: -0.01em;
 }
-.navItem:hover {
-  background: var(--surface-2);
-  color: var(--text);
-}
-.navActive {
-  background: var(--surface-2) !important;
-  color: var(--text) !important;
-  font-weight: 500;
-}
+.navItem:hover { background: var(--surface-2); color: var(--text-muted); }
+.navItem:hover .navShortcut { opacity: 0.35; }
+.navActive { background: var(--surface-2) !important; color: var(--text) !important; font-weight: 600; }
 .navActive::before {
-  content: '';
-  position: absolute; left: 0; top: 0; bottom: 0;
-  width: 2px;
-  background: var(--accent);
+  content: ''; position: absolute; left: -0.5rem; top: 25%; bottom: 25%;
+  width: 2px; border-radius: 0 2px 2px 0; background: var(--accent);
 }
-.navChevron { margin-left: auto; opacity: 0.3; }
+.navShortcut { margin-left: auto; font-size: 0.6rem; color: var(--text-dim); opacity: 0; transition: opacity 0.12s; font-family: var(--font-body); }
+.navDot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--accent); margin-left: auto; flex-shrink: 0;
+}
 
 /* ── Sidebar Bottom ── */
 .sidebarBottom {
-  padding: 0.75rem;
-  border-top: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  padding: 0.85rem 0.75rem 1rem; border-top: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 12px; flex-shrink: 0;
 }
-.sidebarXP { display: flex; flex-direction: column; gap: 5px; }
-.sidebarXPTop { display: flex; justify-content: space-between; align-items: center; }
-.sidebarXPLabel { font-size: 0.62rem; color: var(--text-dim); font-weight: 500; }
-.sidebarXPVal { font-size: 0.62rem; color: var(--gold); font-weight: 600; }
-.sidebarXPTrack {
-  height: 2px;
-  background: var(--surface-3);
-  overflow: hidden;
-}
-.sidebarXPFill {
-  height: 100%;
-  background: var(--accent);
-  transition: width 1s ease;
-}
-.sidebarUser { display: flex; align-items: center; gap: 8px; }
-.sidebarAvatar {
-  width: 28px; height: 28px; border-radius: 4px;
-  background: var(--surface-3);
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 0.75rem; color: var(--text-muted);
-  flex-shrink: 0;
-}
+.sidebarUser { display: flex; align-items: center; gap: 9px; cursor: pointer; position: relative; }
 .sidebarUserInfo { flex: 1; min-width: 0; }
-.sidebarUserName { display: block; font-size: 0.75rem; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sidebarUserEmail { display: block; font-size: 0.6rem; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sidebarActions { display: flex; align-items: center; gap: 8px; }
+.sidebarUserName { display: block; font-size: 0.76rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.01em; }
+.sidebarUserEmail { display: block; font-size: 0.6rem; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+
+/* User popover */
+.userPopover {
+  position: absolute; bottom: calc(100% + 8px); left: 0; right: 0;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 0.5rem;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  z-index: 50;
+}
+.userPopoverName { font-size: 0.78rem; font-weight: 600; color: var(--text); padding: 0.25rem 0.5rem; }
+.userPopoverEmail { font-size: 0.65rem; color: var(--text-dim); padding: 0 0.5rem 0.5rem; border-bottom: 1px solid var(--border); }
+.userPopoverSignOut {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; background: none; border: none;
+  padding: 0.5rem 0.5rem; margin-top: 0.35rem;
+  color: var(--danger); font-size: 0.78rem; font-weight: 500;
+  cursor: pointer; font-family: var(--font-body); border-radius: 5px;
+  transition: background 0.12s;
+}
+.userPopoverSignOut:hover { background: var(--danger-dim); }
+
+.sidebarActions { display: flex; align-items: center; gap: 6px; }
 .signOutBtn {
-  background: none;
-  border: 1px solid var(--border);
-  color: var(--text-dim);
-  border-radius: 4px; padding: 5px;
+  background: none; border: 1px solid var(--border); color: var(--text-dim);
+  border-radius: 5px; padding: 5px 6px;
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer;
-  transition: all 0.1s; margin-left: auto;
+  cursor: pointer; transition: color 0.12s, border-color 0.12s; margin-left: auto;
 }
 .signOutBtn:hover { color: var(--danger); border-color: var(--danger); }
 
-/* ── Theme Toggle ── */
+/* Theme toggle */
 .themeToggle {
   position: relative; width: 40px; height: 22px;
-  background: var(--surface-3);
-  border: 1px solid var(--border);
-  border-radius: 99px; cursor: pointer;
-  transition: background 0.2s; flex-shrink: 0; padding: 0;
+  background: var(--border-light); border: none;
+  border-radius: 99px; cursor: pointer; transition: background 0.2s;
+  flex-shrink: 0; padding: 0;
 }
-.themeToggle.dark { background: var(--accent-dim); border-color: var(--accent); }
+.themeToggle.dark { background: var(--accent); }
 .themeKnob {
-  position: absolute; top: 2px; left: 2px;
+  position: absolute; top: 3px; left: 3px;
   width: 16px; height: 16px; border-radius: 50%;
-  background: var(--text-muted);
+  background: #fff;
   display: flex; align-items: center; justify-content: center;
-  transition: transform 0.2s ease, background 0.2s;
+  transition: transform 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
-.themeToggle.dark .themeKnob { transform: translateX(18px); background: var(--accent); }
+.themeToggle.dark .themeKnob { transform: translateX(18px); }
 
 /* ── Main ── */
 .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .topbar {
   display: none; align-items: center; justify-content: space-between;
-  padding: 0 1.25rem; height: 50px;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
-  position: sticky; top: 0; z-index: 20;
+  padding: 0 1.25rem; height: 48px;
+  border-bottom: 1px solid var(--border); background: var(--surface);
+  position: sticky; top: 0; z-index: 20; flex-shrink: 0;
 }
 .menuBtn {
   background: none; border: none; color: var(--text-muted);
   display: flex; align-items: center; justify-content: center;
-  padding: 5px; cursor: pointer; transition: color 0.1s;
+  padding: 5px; cursor: pointer; transition: color 0.12s; border-radius: 4px;
 }
-.menuBtn:hover { color: var(--text); }
-.topbarLogo {
-  font-family: var(--font-display); font-size: 0.92rem; font-weight: 700;
-  color: var(--text); text-decoration: none;
-}
-.content {
-  flex: 1; padding: 2rem 2.25rem;
-  max-width: 1140px; width: 100%; margin: 0 auto;
-}
+.menuBtn:hover { color: var(--text); background: var(--surface-2); }
+.topbarTitle { font-size: 0.85rem; font-weight: 600; color: var(--text); letter-spacing: -0.02em; }
+.content { flex: 1; padding: 1.75rem 2rem; max-width: 1100px; width: 100%; margin: 0 auto; }
 
 /* ── Responsive ── */
 @media (max-width: 768px) {

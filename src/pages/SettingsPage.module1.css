@@ -70,31 +70,13 @@
 .saveBtn {
   background: var(--accent); color: #fff;
   border: none; border-radius: 8px;
-  padding: 0.6rem 1.1rem; font-size: 0.875rem;
-  font-weight: 600; font-family: var(--font-body);
+  padding: 0.55rem 1rem; font-size: 0.82rem;
+  font-weight: 700; font-family: var(--font-body);
   cursor: pointer; white-space: nowrap;
-  transition: opacity 0.15s, transform 0.1s;
-  display: inline-flex; align-items: center; justify-content: center;
+  transition: opacity 0.15s;
 }
-.saveBtn:hover { opacity: 0.88; }
-.saveBtn:active { transform: scale(0.98); }
-.saveBtn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
-
-/* ── Password checklist ── */
-.pwChecklist {
-  display: grid; grid-template-columns: 1fr 1fr;
-  gap: 4px; margin-top: 8px;
-  padding: 8px 10px;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-}
-.pwCheck {
-  display: flex; align-items: center; gap: 5px;
-  font-size: 0.7rem;
-}
-.pwCheckPassed { color: var(--success); }
-.pwCheckFailed { color: var(--text-dim); }
+.saveBtn:hover { opacity: 0.85; }
+.saveBtn:disabled { opacity: 0.35; cursor: not-allowed; }
 
 .ok { font-size: 0.75rem; color: var(--success); margin-top: 6px; }
 .err { font-size: 0.75rem; color: var(--danger); margin-top: 6px; }

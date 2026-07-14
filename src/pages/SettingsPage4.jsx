@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useAvatar } from '../hooks/useAvatar'
@@ -8,27 +8,17 @@ import {
   updatePassword, EmailAuthProvider, reauthenticateWithCredential
 } from 'firebase/auth'
 import { auth } from '../lib/firebase'
-import { LogOut, User, Lock, Moon, Sun, Check, Info, ChevronRight, Eye, EyeOff } from 'lucide-react'
+import { LogOut, User, Lock, Moon, Sun, Check, Shield, Info, Bell, ChevronRight } from 'lucide-react'
 import styles from './SettingsPage.module.css'
-
-const RULES = [
-  { label: 'One uppercase letter', test: (v) => /[A-Z]/.test(v) },
-  { label: 'One lowercase letter', test: (v) => /[a-z]/.test(v) },
-  { label: 'One number',           test: (v) => /[0-9]/.test(v) },
-  { label: 'One symbol',           test: (v) => /[^A-Za-z0-9]/.test(v) },
-  { label: 'At least 8 characters', test: (v) => v.length >= 8 },
-]
 
 function Section({ title, icon: Icon, children }) {
   return (
     <div className={styles.section}>
-      <div className={styles.sectionBody}>
-        <div className={styles.sectionHead}>
-          <Icon size={13} color="var(--text-dim)" strokeWidth={2} />
-          <span className={styles.sectionTitle}>{title}</span>
-        </div>
-        {children}
+      <div className={styles.sectionHead}>
+        <Icon size={13} color="var(--text-dim)" strokeWidth={2} />
+        <span className={styles.sectionTitle}>{title}</span>
       </div>
+      <div className={styles.sectionBody}>{children}</div>
     </div>
   )
 }
@@ -62,10 +52,7 @@ export default function SettingsPage() {
   const [avatarSaving, setAvatarSaving] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
 
-  const [showCurrentPw, setShowCurrentPw] = useState(false)
-  const [showNewPw, setShowNewPw] = useState(false)
-  const pwChecks = useMemo(() => RULES.map(r => ({ ...r, passed: r.test(newPw) })), [newPw])
-  const pwAllPassed = pwChecks.every(c => c.passed)
+  // Apply theme on mount and on change
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light')
     localStorage.setItem('theme', dark ? 'dark' : 'light')
@@ -112,7 +99,7 @@ export default function SettingsPage() {
   async function savePassword(e) {
     e.preventDefault()
     setPwError(''); setPwSuccess('')
-    if (!pwAllPassed) { setPwError('Password does not meet all requirements.'); return }
+    if (newPw.length < 8) { setPwError('Must be at least 8 characters.'); return }
     setSaving(true)
     try {
       const cred = EmailAuthProvider.credential(user.email, currentPw)
@@ -198,43 +185,19 @@ export default function SettingsPage() {
         <form onSubmit={savePassword}>
           <div className={styles.fieldGroup}>
             <label className={styles.fieldLabel}>Current password</label>
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-              <input className={styles.input} type={showCurrentPw ? 'text' : 'password'} value={currentPw}
-                onChange={e => setCurrentPw(e.target.value)} placeholder="••••••••" style={{ paddingRight: '2.5rem' }} />
-              <button type="button" onClick={() => setShowCurrentPw(v => !v)}
-                style={{ position: 'absolute', right: 10, background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                {showCurrentPw ? <EyeOff size={15} /> : <Eye size={15} />}
-              </button>
-            </div>
+            <input className={styles.input} type="password" value={currentPw}
+              onChange={e => setCurrentPw(e.target.value)} placeholder="••••••••" />
           </div>
           <div className={styles.fieldGroup}>
             <label className={styles.fieldLabel}>New password</label>
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-              <input className={styles.input} type={showNewPw ? 'text' : 'password'} value={newPw}
-                onChange={e => setNewPw(e.target.value)} placeholder="8+ characters" style={{ paddingRight: '2.5rem' }} />
-              <button type="button" onClick={() => setShowNewPw(v => !v)}
-                style={{ position: 'absolute', right: 10, background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                {showNewPw ? <EyeOff size={15} /> : <Eye size={15} />}
-              </button>
-            </div>
-            {newPw.length > 0 && (
-              <div className={styles.pwChecklist}>
-                {pwChecks.map((c, i) => (
-                  <div key={i} className={`${styles.pwCheck} ${c.passed ? styles.pwCheckPassed : styles.pwCheckFailed}`}>
-                    <span>{c.passed ? '✓' : '·'}</span> {c.label}
-                  </div>
-                ))}
-              </div>
-            )}
+            <input className={styles.input} type="password" value={newPw}
+              onChange={e => setNewPw(e.target.value)} placeholder="8+ characters" />
           </div>
-          {pwError && <p className={styles.err} style={{ padding: '0 1rem' }}>{pwError}</p>}
-          {pwSuccess && <p className={styles.ok} style={{ padding: '0 1rem' }}>{pwSuccess}</p>}
-          <div style={{ padding: '0.75rem 1rem 1rem' }}>
-            <button className={styles.saveBtn} type="submit"
-              disabled={saving || !currentPw || !newPw || !pwAllPassed}>
-              {saving ? 'Updating…' : 'Update password'}
-            </button>
-          </div>
+          {pwError && <p className={styles.err}>{pwError}</p>}
+          {pwSuccess && <p className={styles.ok}>{pwSuccess}</p>}
+          <button className={styles.saveBtn} type="submit" disabled={saving || !currentPw || !newPw}>
+            {saving ? 'Updating…' : 'Update password'}
+          </button>
         </form>
 
         <div className={styles.divider} />
@@ -248,6 +211,19 @@ export default function SettingsPage() {
             </span>
           }
         />
+      </Section>
+
+      {/* Notifications */}
+      <Section title="Notifications" icon={Bell}>
+        <Row label="Check-in reminders" sub="Remind you to log progress daily" right={<span className={styles.comingSoon}>Soon</span>} />
+        <Row label="Streak alerts" sub="Alert when your streak is at risk" right={<span className={styles.comingSoon}>Soon</span>} />
+        <Row label="Goal completions" sub="Celebrate when you hit 100%" right={<span className={styles.comingSoon}>Soon</span>} />
+      </Section>
+
+      {/* Privacy */}
+      <Section title="Privacy" icon={Shield}>
+        <Row label="Data storage" sub="Goals and progress stored in Firebase (Google)" right={null} />
+        <Row label="Analytics" sub="No third-party tracking" right={null} />
       </Section>
 
       {/* About */}

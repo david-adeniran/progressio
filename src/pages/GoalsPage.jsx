@@ -80,7 +80,7 @@ function GoalRow({ goal, color, isSelected, onClick }) {
               </span>
             )}
             <span className={styles.goalRowStatus} style={{ color: sc.color, background: sc.bg, border: `1px solid ${sc.border}` }}>
-              {goal.progress >= 100 ? '🎉' : ''} {sc.label}
+              {sc.label}
             </span>
           </div>
         </div>
@@ -92,10 +92,7 @@ function GoalRow({ goal, color, isSelected, onClick }) {
               className={styles.goalRowBarFill}
               style={{
                 width: `${pct}%`,
-                background: goal.progress >= 100
-                  ? 'linear-gradient(90deg, #3ecf8e, #5de0b8)'
-                  : `linear-gradient(90deg, ${color}99, ${color})`,
-                boxShadow: `0 0 8px ${color}55`,
+                background: goal.progress >= 100 ? '#4ade80' : color,
               }}
             />
           </div>
@@ -181,8 +178,7 @@ function GoalDetailPanel({ goal, onClose, color }) {
         <div className={styles.detailBar}>
           <div className={styles.detailBarFill} style={{
             width: `${pct}%`,
-            background: `linear-gradient(90deg, ${color}99, ${color})`,
-            boxShadow: `0 0 10px ${color}66`,
+            background: color,
           }} />
         </div>
       </div>
@@ -387,7 +383,7 @@ export default function GoalsPage() {
             grouped.map(group => (
               <div key={group.key} className={styles.group}>
                 <div className={styles.groupHeader}>
-                  <span className={styles.groupDot} style={{ background: group.dot, boxShadow: `0 0 6px ${group.dot}` }} />
+                  <span className={styles.groupDot} style={{ background: group.dot }} />
                   <span className={styles.groupLabel}>{group.label}</span>
                   <span className={styles.groupCount}>{group.items.length}</span>
                 </div>

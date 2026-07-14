@@ -1,0 +1,123 @@
+/* ── Falling confetti layer ── */
+.confettiField {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 998;
+}
+
+.particle {
+  position: absolute;
+  top: -8%;
+  will-change: transform, opacity;
+  animation-name: fall;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+  animation-fill-mode: forwards;
+}
+
+.particleInner {
+  display: block;
+  animation-name: flutter;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.strip { border-radius: 1px; }
+.dot   { border-radius: 50%; }
+
+/* Fall under gravity: down + sideways drift + rotation, fading in and out
+   at the edges so nothing pops in or out abruptly. */
+@keyframes fall {
+  0%   { transform: translate3d(0, -10vh, 0) rotate(var(--rot-start)); opacity: 0; }
+  8%   { opacity: 0.95; }
+  46%  { transform: translate3d(var(--drift), 52vh, 0) rotate(calc(var(--rot-start) + 200deg)); }
+  92%  { opacity: 0.9; }
+  100% { transform: translate3d(calc(var(--drift) * 0.35), 114vh, 0) rotate(var(--rot-end)); opacity: 0; }
+}
+
+/* Paper flutter — strips flip end-over-end as they fall, like real confetti
+   catching air, rather than spinning like a flat sticker. */
+@keyframes flutter {
+  0%, 100% { transform: scaleY(1); }
+  50%      { transform: scaleY(0.3); }
+}
+
+/* ── Root — fixed top-center ── */
+.root {
+  position: fixed; top: 1.25rem; left: 50%; transform: translateX(-50%);
+  z-index: 999; pointer-events: none;
+  animation: plaqueIn 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.rootOut {
+  animation: plaqueOut 0.35s ease forwards;
+}
+@keyframes plaqueIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+@keyframes plaqueOut {
+  to { opacity: 0; transform: translateX(-50%) translateY(-8px); }
+}
+
+/* ── Plaque — flat surface, bordered, no shadow/gradient/glow ── */
+.plaque {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 0.8rem 1rem 0.85rem 1.1rem;
+  min-width: 260px;
+  max-width: 320px;
+  overflow: hidden;
+}
+
+/* The one accent element — a thin tier-colored rule down the left edge */
+.rule {
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 2px;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 0.4rem;
+}
+
+.eyebrow {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.count {
+  margin-left: auto;
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.label {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.01em;
+  margin-bottom: 2px;
+}
+
+.desc {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .particle, .particleInner, .root, .rootOut {
+    animation: none !important;
+  }
+  .confettiField { display: none; }
+}

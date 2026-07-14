@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useGoals } from '../hooks/useGoals'
 import { UNIT_CATEGORIES } from '../components/AddGoalModal'
-import { Calendar, CalendarOff, Lock } from 'lucide-react'
+import { Calendar, CalendarOff } from 'lucide-react'
 import styles from './GoalDetailPage.module.css'
 
 const CATEGORY_COLORS = {
@@ -127,9 +127,17 @@ function CelebrationPopup({ message, sub, onClose }) {
   }, [onClose])
 
   return (
-    <div className={styles.celebration}>
-      <div className={styles.celebrationMsg}>{message}</div>
-      <div className={styles.celebrationSub}>{sub}</div>
+    <div style={{
+      position: 'fixed', top: '24px', left: '50%', transform: 'translateX(-50%)',
+      zIndex: 999, background: 'linear-gradient(135deg, #7c6af7, #4ab8f5)',
+      color: '#fff', borderRadius: '16px', padding: '1.25rem 2rem',
+      boxShadow: '0 8px 32px rgba(124,106,247,0.5)',
+      textAlign: 'center', animation: 'fadeInUp 0.4s ease',
+      minWidth: '280px', maxWidth: '90vw',
+    }}>
+      <div style={{ fontSize: '2.5rem', marginBottom: '6px' }}>🎉</div>
+      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1.15rem' }}>{message}</div>
+      <div style={{ fontSize: '0.82rem', opacity: 0.88, marginTop: '5px' }}>{sub}</div>
     </div>
   )
 }
@@ -253,13 +261,13 @@ export default function GoalDetailPage() {
         date: new Date(entryDate + 'T12:00:00').toISOString(),
       })
       if (pct < 100 && newPct >= 100) {
-        setCelebration({ message: 'Goal complete', sub: 'You crushed it. Well done.' })
+        setCelebration({ message: 'Goal Complete! 🏁', sub: 'You crushed it. Well done.' })
       } else if (newPct >= 75 && pct < 75) {
-        setCelebration({ message: '75% there', sub: 'Almost at the finish line.' })
+        setCelebration({ message: '75% There!', sub: 'Almost at the finish line.' })
       } else if (newPct >= 50 && pct < 50) {
-        setCelebration({ message: 'Halfway there', sub: 'Keep the momentum going.' })
+        setCelebration({ message: 'Halfway There! ⚡', sub: 'Keep the momentum going.' })
       } else if (newPct >= 25 && pct < 25) {
-        setCelebration({ message: 'First quarter done', sub: 'Great start, keep going.' })
+        setCelebration({ message: 'First Quarter Done!', sub: 'Great start, keep going.' })
       }
       setAmount('')
     } else {
@@ -379,9 +387,7 @@ export default function GoalDetailPage() {
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between'
                 }}>
                   <span>{goal.frequency}</span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem', color: 'var(--text-dim)' }}>
-                    <Lock size={11} /> Locked
-                  </span>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>🔒 Locked</span>
                 </div>
                 <p style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '4px' }}>
                   Frequency cannot be changed after creation.
@@ -467,7 +473,7 @@ export default function GoalDetailPage() {
             <span className={styles.amountRemaining}>· {unit}{fmt(Math.max(0, targetAmount - currentAmount))} to go</span>
           </div>
         )}
-        {pct >= 100 && <p className={styles.complete}>✓ Goal complete</p>}
+        {pct >= 100 && <p className={styles.complete}>Goal complete! 🎉</p>}
 
         {/* Milestone markers */}
         {isNumeric && (
@@ -475,12 +481,12 @@ export default function GoalDetailPage() {
             {[25, 50, 75, 100].map(m => {
               const reached = pct >= m
               return (
-                <div key={m} className={styles.milestone}>
+                <div key={m} className={`${styles.milestone} ${reached ? styles.milestoneReached : ''}`}>
                   <div className={styles.milestoneDot} style={{ background: reached ? color : 'var(--surface-3)', borderColor: reached ? color : 'var(--border)' }}>
                     {reached ? '✓' : ''}
                   </div>
                   <span className={styles.milestoneLabel} style={{ color: reached ? color : 'var(--text-dim)' }}>
-                    {m}%
+                    {m === 100 ? '🏁' : `${m}%`}
                   </span>
                   <span className={styles.milestoneAmt} style={{ color: reached ? 'var(--text-muted)' : 'var(--text-dim)' }}>
                     {unit}{fmt(Math.round(targetAmount * m / 100))}

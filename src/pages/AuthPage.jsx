@@ -175,7 +175,7 @@ export default function AuthPage() {
               <span className={styles.brandStatLabel}>Life Areas</span>
             </div>
             <div className={styles.brandStat}>
-              <span className={styles.brandStatVal}>10</span>
+              <span className={styles.brandStatVal}>15</span>
               <span className={styles.brandStatLabel}>Levels</span>
             </div>
           </div>

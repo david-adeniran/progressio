@@ -36,7 +36,6 @@ export default function Layout() {
   const [confettiQueue, setConfettiQueue] = useState([])
   const [activeConfetti, setActiveConfetti] = useState(null)
   const seenAchievements = useRef(new Set())
-  const seenLoaded = useRef(false)
 
   const totalXP = calcTotalXP(goals) + (achievementXP || 0);
   const levelInfo = getLevelInfo(totalXP);
@@ -46,22 +45,9 @@ export default function Layout() {
   const unlocked = getUnlockedAchievements(goals, totalXP);
   const hasNewAchievement = unlocked.length > 0;
 
-  // Load which achievements this user has already seen, so reopening the
-  // app doesn't replay confetti for achievements unlocked in a past session.
-  useEffect(() => {
-    seenLoaded.current = false
-    seenAchievements.current = new Set()
-    if (!user?.uid) return
-    try {
-      const stored = JSON.parse(localStorage.getItem(`progressio_seen_achievements_${user.uid}`) || "[]")
-      seenAchievements.current = new Set(stored)
-    } catch {}
-    seenLoaded.current = true
-  }, [user?.uid])
-
   // Detect newly unlocked achievements
   useEffect(() => {
-    if (!goals.length || !seenLoaded.current) return
+    if (!goals.length) return
     const newlyUnlocked = []
     for (const a of ACHIEVEMENTS) {
       if (seenAchievements.current.has(a.id)) continue
@@ -74,16 +60,8 @@ export default function Layout() {
     }
     if (newlyUnlocked.length > 0) {
       setConfettiQueue(q => [...q, ...newlyUnlocked])
-      if (user?.uid) {
-        try {
-          localStorage.setItem(
-            `progressio_seen_achievements_${user.uid}`,
-            JSON.stringify([...seenAchievements.current])
-          )
-        } catch {}
-      }
     }
-  }, [goals, totalXP, user?.uid])
+  }, [goals, totalXP])
 
   // Drain queue one at a time
   useEffect(() => {
@@ -137,8 +115,6 @@ export default function Layout() {
       {activeConfetti && (
         <Confetti
           achievement={activeConfetti}
-          unlockedCount={unlocked.length}
-          totalCount={ACHIEVEMENTS.length}
           onDone={() => setActiveConfetti(null)}
         />
       )}

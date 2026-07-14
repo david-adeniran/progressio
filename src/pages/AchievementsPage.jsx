@@ -79,38 +79,33 @@ export default function AchievementsPage() {
   return (
     <div className={styles.page}>
 
-      {/* Reset confirm modal */}
+      {/* Reset confirm — inline, not modal */}
       {showResetConfirm && (
         <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)',
-          zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          backdropFilter: 'blur(4px)',
+          marginBottom: '1.5rem',
+          padding: '1.1rem 1.25rem',
+          background: 'var(--surface)',
+          border: '1px solid var(--danger)',
+          borderLeft: '3px solid var(--danger)',
+          borderRadius: '12px',
+          display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap',
         }}>
-          <div style={{
-            background: 'var(--surface)', border: '1px solid var(--border)',
-            borderRadius: '18px', padding: '2rem', maxWidth: '380px', width: '90%',
-            textAlign: 'center', boxShadow: '0 24px 48px rgba(0,0,0,0.4)',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>
-              <AlertTriangle size={40} color="var(--danger)" />
-            </div>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.15rem', fontWeight: 700, color: 'var(--text)', marginBottom: '0.5rem' }}>
+          <AlertTriangle size={16} color="var(--danger)" style={{ flexShrink: 0 }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text)', marginBottom: '2px' }}>
               Reset all achievements?
-            </h2>
-            <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '1.5rem' }}>
-              This will permanently erase all your unlocked achievements. This action cannot be undone.
-            </p>
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-              <button className="btn btn-ghost" onClick={() => setShowResetConfirm(false)}>Cancel</button>
-              <button
-                className="btn"
-                style={{ background: 'var(--danger)', color: '#fff' }}
-                onClick={handleReset}
-                disabled={resetting}
-              >
-                {resetting ? 'Resetting…' : 'Yes, reset everything'}
-              </button>
             </div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+              This permanently erases all unlocked achievements and cannot be undone.
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+            <button className="btn btn-ghost" style={{ fontSize: '0.78rem', padding: '0.35rem 0.85rem' }}
+              onClick={() => setShowResetConfirm(false)}>Cancel</button>
+            <button className="btn" style={{ fontSize: '0.78rem', padding: '0.35rem 0.85rem', background: 'var(--danger)', color: '#fff' }}
+              onClick={handleReset} disabled={resetting}>
+              {resetting ? 'Resetting…' : 'Reset'}
+            </button>
           </div>
         </div>
       )}
@@ -144,7 +139,7 @@ export default function AchievementsPage() {
         <div>
           {/* Hero */}
           <div className={styles.hero}>
-            <div className={styles.heroTag}><Trophy size={13} color="var(--gold)" /> Current Featured Achievement</div>
+            <div className={styles.heroTag}>Featured Achievement</div>
             {featured ? (
               <div className={styles.heroBody}>
                 <div className={styles.heroHexWrap}>
@@ -156,7 +151,7 @@ export default function AchievementsPage() {
                 <div className={styles.heroInfo}>
                   <div className={styles.heroName}>{featured.label}</div>
                   <div className={styles.heroDesc}>{featured.revealedDesc || featured.desc}</div>
-                  <div className={styles.heroXP}><Zap size={12} /> +{TIER_META[featured.tier].xp} XP</div>
+                  <div className={styles.heroXP}>+{TIER_META[featured.tier].xp} XP</div>
                 </div>
               </div>
             ) : (
