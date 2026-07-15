@@ -1,23 +1,24 @@
-// 10 placeholder avatars using DiceBear API — swap URLs for real images later
-// Just replace the `url` value with your own image path e.g. '/avatars/avatar1.png'
-
+// Avatars are generated from the user's initials, not illustrated images —
+// keeps the app's monochrome + single-accent identity intact and needs no
+// external assets. Each option is just a background/foreground pairing
+// pulled from tokens already defined in index.css.
 export const AVATARS = [
-  { id: 'male1',   label: 'Avatar 1',  gender: 'male',   url: '/avatar1.png' },
-  { id: 'female1', label: 'Avatar 2',  gender: 'female', url: '/avatar2.png' },
-  { id: 'male2',   label: 'Avatar 3',  gender: 'male',   url: '/avatar3.png' },
-  { id: 'female2',   label: 'Avatar 4',  gender: 'female',   url: '/avatar4.png' },
-  { id: 'male3',   label: 'Avatar 5',  gender: 'male',   url: '/avatar5.png' },
-  { id: 'female3',   label: 'Avatar 6',  gender: 'female',   url: '/avatar6.png' },
-  { id: 'male4',   label: 'Avatar 7', gender: 'male',   url: '/avatar7.png' },
-  { id: 'female4', label: 'Avatar 8',  gender: 'female', url: '/avatar8.png' },
-  { id: 'male5', label: 'Avatar 9',  gender: 'male', url: '/avatar9.png' },
-  { id: 'female5', label: 'Avatar 10', gender: 'female', url: '/avatar10.png' },
-  { id: 'male6', label: 'Avatar 11', gender: 'male', url: '/avatar11.png' },
-  { id: 'female6', label: 'Avatar 12', gender: 'female', url: '/avatar12.png' },
-  { id: 'male7', label: 'Avatar 13', gender: 'male', url: '/avatar13.png' }, 
-  { id: 'female7', label: 'Avatar 14', gender: 'female', url: '/avatar14.png' },
+  { id: 'neutral', label: 'Neutral', bg: 'var(--surface-3)', fg: 'var(--text)' },
+  { id: 'accent',  label: 'Cream',   bg: 'var(--accent)',    fg: '#0a0a0a' },
+  { id: 'gold',    label: 'Gold',    bg: 'var(--gold)',      fg: '#0a0a0a' },
+  { id: 'blue',    label: 'Blue',    bg: 'var(--blue)',      fg: '#0a0a0a' },
+  { id: 'success', label: 'Green',   bg: 'var(--success)',   fg: '#0a0a0a' },
+  { id: 'danger',  label: 'Red',     bg: 'var(--danger)',    fg: '#0a0a0a' },
 ]
 
 export function getAvatarById(id) {
-  return AVATARS.find(a => a.id === id) || null
+  return AVATARS.find(a => a.id === id) || AVATARS[0]
+}
+
+export function getInitials(name, email) {
+  const source = (name || email || '').trim()
+  if (!source) return '?'
+  const parts = source.split(/\s+/).filter(Boolean)
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase()
+  return parts[0][0].toUpperCase()
 }

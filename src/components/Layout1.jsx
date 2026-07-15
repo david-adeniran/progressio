@@ -59,17 +59,6 @@ export default function Layout() {
     seenLoaded.current = true
   }, [user?.uid])
 
-  // When achievements are reset (e.g. from the Achievements page), forget
-  // which ones were "seen" in memory too — localStorage alone isn't enough
-  // since this ref lives for the whole session once loaded.
-  useEffect(() => {
-    function handleAchievementsReset() {
-      seenAchievements.current = new Set()
-    }
-    window.addEventListener('progressio:achievements-reset', handleAchievementsReset)
-    return () => window.removeEventListener('progressio:achievements-reset', handleAchievementsReset)
-  }, [])
-
   // Detect newly unlocked achievements
   useEffect(() => {
     if (!goals.length || !seenLoaded.current) return

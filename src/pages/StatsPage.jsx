@@ -5,6 +5,7 @@ import { useGoals } from '../hooks/useGoals'
 import { calcTotalXP, getLevelInfo, ACHIEVEMENTS, LEVELS } from '../lib/xp'
 import { X, Flame, Zap, Trophy, TrendingUp, Target } from 'lucide-react'
 import styles from './StatsPage.module.css'
+import { calcStreak } from '../lib/streak'
 
 const CATEGORY_COLORS = {
   Finance: '#7c6af7', Fitness: '#3ecf8e', Learning: '#f0a844',
@@ -88,32 +89,6 @@ function getYearMonths() {
 // All Time: 2025 and 2026
 function getAllTimeYears() {
   return ['2025', '2026']
-}
-
-// ─── Streak calculator (from log dates across all goals) ─────────────────────
-function calcStreak(goals) {
-  const allDates = new Set()
-  for (const g of goals) for (const l of (g.logs || [])) allDates.add(new Date(l.date).toISOString().split('T')[0])
-  const sorted = [...allDates].sort()
-  if (!sorted.length) return { current: 0, best: 0 }
-  let best = 1, cur = 1
-  for (let i = 1; i < sorted.length; i++) {
-    const diff = (new Date(sorted[i]) - new Date(sorted[i-1])) / 86400000
-    if (diff === 1) { cur++; best = Math.max(best, cur) } else cur = 1
-  }
-  // current streak — check if last log was today or yesterday
-  const today = new Date().toISOString().split('T')[0]
-  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
-  const last = sorted[sorted.length - 1]
-  let current = 0
-  if (last === today || last === yesterday) {
-    current = 1
-    for (let i = sorted.length - 2; i >= 0; i--) {
-      const diff = (new Date(sorted[i+1]) - new Date(sorted[i])) / 86400000
-      if (diff === 1) {current++} else {break}
-    }
-  }
-  return { current, best }
 }
 
 // ─── Line Chart ───────────────────────────────────────────────────────────────

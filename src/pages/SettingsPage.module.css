@@ -102,21 +102,23 @@
 /* ── Avatar grid ── */
 .avatarGrid { display: flex; gap: 8px; flex-wrap: wrap; }
 .avatarBtn {
-  position: relative; width: 54px; height: 54px;
-  border-radius: 50%; border: 2px solid var(--border);
-  background: var(--surface-2); cursor: pointer;
-  padding: 0; overflow: hidden;
+  position: relative; width: 46px; height: 46px;
+  border-radius: 6px; border: 2px solid transparent;
+  cursor: pointer; padding: 0; overflow: visible;
+  display: flex; align-items: center; justify-content: center;
   transition: border-color 0.15s, transform 0.15s;
 }
-.avatarBtn:hover { border-color: var(--accent); transform: scale(1.06); }
+.avatarBtn:hover { transform: scale(1.05); }
 .avatarBtnActive {
-  border-color: var(--accent) !important;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+  border-color: var(--text) !important;
 }
-.avatarImg { width: 100%; height: 100%; object-fit: cover; display: block; }
+.avatarInitial {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: 0.85rem; letter-spacing: 0.01em;
+}
 .avatarCheck {
-  position: absolute; bottom: 0; right: 0;
-  width: 18px; height: 18px; border-radius: 50%;
+  position: absolute; bottom: -4px; right: -4px;
+  width: 16px; height: 16px; border-radius: 4px;
   background: var(--accent); border: 2px solid var(--surface);
   display: flex; align-items: center; justify-content: center;
 }

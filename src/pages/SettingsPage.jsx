@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useAvatar } from '../hooks/useAvatar'
-import { AVATARS } from '../lib/avatars'
+import { AVATARS, getInitials } from '../lib/avatars'
 import {
   signOut, updateProfile,
   updatePassword, EmailAuthProvider, reauthenticateWithCredential
@@ -47,7 +47,7 @@ function Row({ label, sub, right, onClick, danger }) {
 
 export default function SettingsPage() {
   const { user, refreshUser } = useAuth()
-  const { avatarId, saveAvatar } = useAvatar(user?.uid)
+  const { avatarId, realName, loading: profileLoading, saveAvatar, setRealNameOnce } = useAvatar(user?.uid)
   const navigate = useNavigate()
 
   const { dark, setDark } = useOutletContext()
@@ -66,10 +66,20 @@ export default function SettingsPage() {
   const [showNewPw, setShowNewPw] = useState(false)
   const pwChecks = useMemo(() => RULES.map(r => ({ ...r, passed: r.test(newPw) })), [newPw])
   const pwAllPassed = pwChecks.every(c => c.passed)
+  const initials = useMemo(() => getInitials(displayName || user?.displayName, user?.email), [displayName, user?.displayName, user?.email])
 
   useEffect(() => {
     if (user?.displayName) setDisplayName(user.displayName)
   }, [user?.displayName])
+
+  // Accounts created before "realName" existed have nothing stored for it.
+  // Seed it once, from whatever displayName currently is, then never touch
+  // it again — setRealNameOnce is itself a no-op if realName is already set.
+  useEffect(() => {
+    if (!profileLoading && !realName && user?.displayName) {
+      setRealNameOnce(user.displayName)
+    }
+  }, [profileLoading, realName, user?.displayName])
 
   async function handleSignOut() {
     setSigningOut(true)
@@ -137,10 +147,11 @@ export default function SettingsPage() {
             {AVATARS.map(a => (
               <button key={a.id}
                 className={`${styles.avatarBtn} ${avatarId === a.id ? styles.avatarBtnActive : ''}`}
+                style={{ background: a.bg, color: a.fg }}
                 onClick={() => handleAvatarSelect(a.id)} title={a.label}>
-                <img src={a.url} alt={a.label} className={styles.avatarImg} />
+                <span className={styles.avatarInitial}>{initials}</span>
                 {avatarId === a.id && (
-                  <div className={styles.avatarCheck}><Check size={10} color="#fff" strokeWidth={3} /></div>
+                  <div className={styles.avatarCheck}><Check size={9} color="#0a0a0a" strokeWidth={3} /></div>
                 )}
               </button>
             ))}
@@ -153,6 +164,10 @@ export default function SettingsPage() {
           <div className={styles.fieldGroup}>
             <label className={styles.fieldLabel}>Email</label>
             <input className={styles.input} value={user?.email || ''} disabled />
+          </div>
+          <div className={styles.fieldGroup}>
+            <label className={styles.fieldLabel}>Name</label>
+            <input className={styles.input} value={realName || (profileLoading ? '' : '—')} disabled />
           </div>
           <div className={styles.fieldGroup}>
             <label className={styles.fieldLabel}>Display name</label>

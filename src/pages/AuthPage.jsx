@@ -8,7 +8,8 @@ import {
   sendEmailVerification,
 } from "firebase/auth";
 import emailjs from "@emailjs/browser";
-import { auth } from "../lib/firebase";
+import { doc, setDoc } from "firebase/firestore";
+import { auth, db } from "../lib/firebase";
 import styles from "./AuthPage.module.css";
 
 const EMAILJS_SERVICE = "service_rdx4vns";
@@ -58,6 +59,11 @@ export default function AuthPage() {
       if (mode === "signup") {
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         await updateProfile(cred.user, { displayName: name });
+        await setDoc(
+          doc(db, "users", cred.user.uid, "meta", "profile"),
+          { realName: name.trim() },
+          { merge: true }
+        );
         await sendEmailVerification(cred.user);
         try {
           await emailjs.send(
@@ -103,8 +109,8 @@ export default function AuthPage() {
         <div className={styles.brandTop}>
           <div className={styles.brandMarkRow}>
             <img
-              src="https://res.cloudinary.com/f3z9dqhr/image/upload/f_auto/q_auto/Gemini_Generated_Image_s9gwums9gwums9gw-removebg-preview_cfktxv.png"
-              alt="Progressio"
+              src="https://res.cloudinary.com/f3z9dqhr/image/upload/f_auto,q_auto/Screenshot_2026-07-07_112721-removebg-preview_wn6mzo"
+              alt=""
               className={styles.brandLogo}
             />
             <span className={styles.brandMark}>Progressio</span>

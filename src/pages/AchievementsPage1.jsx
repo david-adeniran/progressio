@@ -64,16 +64,6 @@ export default function AchievementsPage() {
   async function handleReset() {
     setResetting(true)
     await resetAchievements()
-    if (user?.uid) {
-      try {
-        localStorage.removeItem(`progressio_seen_achievements_${user.uid}`)
-      } catch {}
-    }
-    // Layout keeps its own in-memory copy of "seen" achievement IDs for the
-    // life of the session — clearing localStorage alone won't reach it.
-    // This event tells the running Layout instance to forget them too, so
-    // re-earned achievements trigger confetti again without a page reload.
-    window.dispatchEvent(new CustomEvent('progressio:achievements-reset'))
     setResetting(false)
     setShowResetConfirm(false)
   }

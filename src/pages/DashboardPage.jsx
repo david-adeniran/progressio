@@ -8,6 +8,7 @@ import {
   calcTotalXP, getLevelInfo, getCategoryLevel, ACHIEVEMENTS,
 } from "../lib/xp";
 import styles from "./DashboardPage.module.css";
+import { calcStreak } from "../lib/streak";
 import UserAvatar from "../components/UserAvatar";
 import {
   Wallet, Dumbbell, BookOpen, Briefcase, Heart, Plane,
@@ -43,44 +44,6 @@ function AchievementIcon({ icon, unlocked, size = 22 }) {
   const Icon = ACHIEVEMENT_ICONS[icon];
   if (!unlocked) return <Lock size={size} color="var(--text-dim)" />;
   return Icon ? <Icon size={size} color="var(--gold)" strokeWidth={1.8} /> : null;
-}
-
-function calcStreak(goals) {
-  const allDates = new Set();
-  goals.forEach(g => (g.logs || []).forEach(l => {
-    allDates.add(new Date(l.date).toISOString().split("T")[0]);
-  }));
-  if (!allDates.size) return { current: 0, best: 0 };
-
-  const ascending = [...allDates].sort();
-
-  // Best streak ever: longest run of consecutive days across all history
-  let best = 1, run = 1;
-  for (let i = 1; i < ascending.length; i++) {
-    const a = new Date(ascending[i - 1]), b = new Date(ascending[i]);
-    if ((b - a) / 86400000 === 1) {
-      run++;
-      best = Math.max(best, run);
-    } else {
-      run = 1;
-    }
-  }
-
-  // Current streak: only counts if it's still active (last log was today or yesterday)
-  const descending = [...ascending].reverse();
-  const today = new Date().toISOString().split("T")[0];
-  const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
-  let current = 0;
-  if (descending[0] === today || descending[0] === yesterday) {
-    current = 1;
-    for (let i = 1; i < descending.length; i++) {
-      const a = new Date(descending[i - 1]), b = new Date(descending[i]);
-      if ((a - b) / 86400000 === 1) current++;
-      else break;
-    }
-  }
-
-  return { current, best: Math.max(best, current) };
 }
 
 // Finds the real date a goal first crossed 100%, by scanning its own log
@@ -161,32 +124,32 @@ const QUOTES = {
   noGoals: [
     "Every big win starts with one small decision to begin.",
     "The best time to start was yesterday. The next best time is now.",
-    "You don't need a plan. You need a first step.",
+    "No wait for motivation. Show up first.",
   ],
   completedHistory: [
-    "You've done this before. You know you can do it again.",
+    "You don run am before. You fit run am again.",
     "That achievement history isn't gone. Add a goal and keep building on it.",
-    "You've proven you can finish. What's next?",
+    "You finish work boss! Time to do more.",
   ],
   streak: [
     "That streak isn't luck. That's you showing up.",
-    "This is what discipline looks like from the outside.",
-    "The streak is proof, not pressure. Keep going.",
+    "No excuses. Just action.",
+    "One day at a time. You dey build something.",
   ],
   active: [
     "You don't need a big day. You need today.",
-    "Progress is quiet. Keep making it anyway.",
-    "Nobody's watching but you. Keep going.",
+    "You dey build something wey go last. No dull",
+    "Nobody's watching but you. Lock in.",
   ],
   completed: [
-    "That's not nothing. Look at what you just did.",
-    "One down. You know exactly what it takes now.",
-    "Completed goals don't lie. You're capable of this.",
+    "No be small thing. See wetin you just do.",
+    "Target hit. No be luck, na consistency",
+    "Mission complete. Respect!",
   ],
   normal: [
-    "Consistency beats intensity.",
+    "Better days ahead. Just keep showing up.",
     "Small consistent actions lead to extraordinary results.",
-    "Showing up is the whole game.",
+    "Sharp sharp, one more task.",
   ],
 };
 
@@ -209,7 +172,7 @@ function pickQuote(category) {
 // the moment it's chosen — nothing here is a rotating text variant, only
 // which condition gets shown rotates.
 const MESSAGES = {
-  noGoals: () => "Your journey starts with a single goal. Add one now.",
+  noGoals: () => "Every big dream starts with one goal. Add yours today.",
   completedHistory: () => "You've completed goals before. Ready to start your next one?",
   streak: ({ name, streak }) => `Keep crushing it, ${name}! ${streak.current}-day streak going strong.`,
   completed: ({ completed }) => `You've completed ${completed} goal${completed > 1 ? 's' : ''}. Keep the momentum!`,
@@ -264,6 +227,12 @@ export default function DashboardPage() {
   const [filter, setFilter] = useState("All");
   const [goalFilter, setGoalFilter] = useState("All"); // All / On Track / At Risk / Completed
   const navigate = useNavigate();
+  const goalsSectionRef = useRef(null);
+
+  function goToCompletedGoals() {
+    setGoalFilter("Completed");
+    goalsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   const name = user?.displayName || user?.email?.split("@")[0] || "there";
   const categories = Object.keys(CATEGORY_COLORS);
@@ -348,7 +317,12 @@ export default function DashboardPage() {
               <Flame size={11} color="var(--danger)" /> Best: {streak.best} days
             </div>
           </div>
-          <div className={styles.ccStat}>
+          <div
+            className={`${styles.ccStat} ${styles.ccStatClickable}`}
+            onClick={goToCompletedGoals}
+            role="button"
+            tabIndex={0}
+          >
             <div className={`${styles.ccStatIcon} ${styles.ccStatIconAccent}`}>
               <Target size={20} color="var(--accent)" />
             </div>
@@ -358,7 +332,12 @@ export default function DashboardPage() {
               <CheckCircle size={11} color="var(--success)" /> Keep it up!
             </div>
           </div>
-          <div className={styles.ccStat}>
+          <div
+            className={`${styles.ccStat} ${styles.ccStatClickable}`}
+            onClick={() => navigate("/achievements")}
+            role="button"
+            tabIndex={0}
+          >
             <div className={`${styles.ccStatIcon} ${styles.ccStatIconGold}`}>
               <Trophy size={20} color="var(--gold)" />
             </div>
@@ -366,7 +345,12 @@ export default function DashboardPage() {
             <div className={styles.ccStatLabel}>Achievements</div>
             <div className={styles.ccStatSub}><Trophy size={11} color="var(--gold)" /> {ACHIEVEMENTS.length - unlockedAchievements.length} to unlock</div>
           </div>
-          <div className={styles.ccStat}>
+          <div
+            className={`${styles.ccStat} ${styles.ccStatClickable}`}
+            onClick={goToCompletedGoals}
+            role="button"
+            tabIndex={0}
+          >
             <div className={`${styles.ccStatIcon} ${styles.ccStatIconBlue}`}>
               <TrendingUp size={20} color="var(--blue)" />
             </div>
@@ -431,7 +415,7 @@ export default function DashboardPage() {
           </div>
 
           {/* ── Goals ── */}
-          <div className={styles.section}>
+          <div className={styles.section} ref={goalsSectionRef}>
             <div className={styles.sectionHead}>
               <span className={styles.sectionTitle}>
                 {filter === "All" ? "Your Goals" : `${filter} Goals`}
