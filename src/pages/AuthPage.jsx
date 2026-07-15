@@ -1,11 +1,11 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   updateProfile,
   sendEmailVerification,
-  sendPasswordResetEmail,
 } from "firebase/auth";
 import emailjs from "@emailjs/browser";
 import { auth } from "../lib/firebase";
@@ -25,6 +25,7 @@ const RULES = [
 ];
 
 export default function AuthPage() {
+  const navigate = useNavigate();
   const [mode, setMode] = useState("login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -35,9 +36,6 @@ export default function AuthPage() {
   const [touched, setTouched] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [resetSent, setResetSent] = useState(false);
-  const [resetEmail, setResetEmail] = useState("");
-  const [showReset, setShowReset] = useState(false);
   const [verificationSent, setVerificationSent] = useState(false);
 
   const checks = useMemo(
@@ -79,19 +77,6 @@ export default function AuthPage() {
     }
   }
 
-  async function handleReset(e) {
-    e.preventDefault();
-    if (!resetEmail.trim()) return;
-    setLoading(true);
-    try {
-      await sendPasswordResetEmail(auth, resetEmail.trim());
-      setResetSent(true);
-    } catch (err) {
-      setError(friendlyError(err.code));
-    }
-    setLoading(false);
-  }
-
   function friendlyError(code) {
     const map = {
       "auth/email-already-in-use": "That email is already registered.",
@@ -112,49 +97,18 @@ export default function AuthPage() {
   return (
     <div className={styles.page}>
 
-      {/* Reset modal */}
-      {showReset && (
-        <div className={styles.modal}>
-          <div className={styles.modalBox}>
-            <h2 className={styles.modalTitle}>Reset password</h2>
-            {resetSent ? (
-              <>
-                <p className={styles.successNote}>Reset link sent. Check your inbox.</p>
-                <div className={styles.modalActions}>
-                  <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}
-                    onClick={() => { setShowReset(false); setResetSent(false); setResetEmail(""); }}>
-                    Done
-                  </button>
-                </div>
-              </>
-            ) : (
-              <form onSubmit={handleReset}>
-                <p className={styles.modalSub}>Enter your email and we'll send a reset link.</p>
-                <input
-                  type="email" value={resetEmail}
-                  onChange={e => setResetEmail(e.target.value)}
-                  placeholder="you@example.com" required
-                  className={styles.input}
-                  style={{ borderBottom: '1.5px solid var(--border)', display: 'block', width: '100%' }}
-                />
-                {error && <p className={styles.error}>{error}</p>}
-                <div className={styles.modalActions}>
-                  <button type="button" className="btn btn-ghost" style={{ flex: 1, justifyContent: 'center' }}
-                    onClick={() => { setShowReset(false); setError(""); }}>Cancel</button>
-                  <button type="submit" className="btn btn-primary" style={{ flex: 1, justifyContent: 'center' }}
-                    disabled={loading}>{loading ? "Sending…" : "Send link"}</button>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Left — brand */}
       <div className={styles.brand}>
         <div className={styles.brandAccentLine} />
         <div className={styles.brandTop}>
-          <span className={styles.brandMark}>Progressio</span>
+          <div className={styles.brandMarkRow}>
+            <img
+              src="https://res.cloudinary.com/f3z9dqhr/image/upload/f_auto/q_auto/Gemini_Generated_Image_s9gwums9gwums9gw-removebg-preview_cfktxv.png"
+              alt="Progressio"
+              className={styles.brandLogo}
+            />
+            <span className={styles.brandMark}>Progressio</span>
+          </div>
           <h1 className={styles.brandHeadline}>
             Build the life<br />
             you <em>actually</em><br />
@@ -250,7 +204,7 @@ export default function AuthPage() {
 
           {mode === "login" && (
             <button type="button" className={styles.forgotBtn}
-              onClick={() => { setShowReset(true); setError(""); setResetEmail(email); }}>
+              onClick={() => navigate("/reset-password", { state: { email } })}>
               Forgot password?
             </button>
           )}

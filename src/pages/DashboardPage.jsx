@@ -50,48 +50,201 @@ function calcStreak(goals) {
   goals.forEach(g => (g.logs || []).forEach(l => {
     allDates.add(new Date(l.date).toISOString().split("T")[0]);
   }));
-  const sorted = [...allDates].sort().reverse();
-  if (!sorted.length) return 0;
+  if (!allDates.size) return { current: 0, best: 0 };
+
+  const ascending = [...allDates].sort();
+
+  // Best streak ever: longest run of consecutive days across all history
+  let best = 1, run = 1;
+  for (let i = 1; i < ascending.length; i++) {
+    const a = new Date(ascending[i - 1]), b = new Date(ascending[i]);
+    if ((b - a) / 86400000 === 1) {
+      run++;
+      best = Math.max(best, run);
+    } else {
+      run = 1;
+    }
+  }
+
+  // Current streak: only counts if it's still active (last log was today or yesterday)
+  const descending = [...ascending].reverse();
   const today = new Date().toISOString().split("T")[0];
   const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
-  if (sorted[0] !== today && sorted[0] !== yesterday) return 0;
-  let streak = 1;
-  for (let i = 1; i < sorted.length; i++) {
-    const a = new Date(sorted[i - 1]), b = new Date(sorted[i]);
-    if ((a - b) / 86400000 === 1) streak++;
-    else break;
+  let current = 0;
+  if (descending[0] === today || descending[0] === yesterday) {
+    current = 1;
+    for (let i = 1; i < descending.length; i++) {
+      const a = new Date(descending[i - 1]), b = new Date(descending[i]);
+      if ((a - b) / 86400000 === 1) current++;
+      else break;
+    }
   }
-  return streak;
+
+  return { current, best: Math.max(best, current) };
 }
+
+// Finds the real date a goal first crossed 100%, by scanning its own log
+// history (logEntry and logMilestone both record `progress` per entry).
+// Returns null if the goal isn't complete or has no logs to date it from.
+function getCompletionDate(goal) {
+  if (goal.progress < 100 || !goal.logs?.length) return null;
+  const sorted = [...goal.logs].sort((a, b) => new Date(a.date) - new Date(b.date));
+  const firstHit = sorted.find(l => l.progress >= 100);
+  return firstHit ? firstHit.date : null;
+}
+
+// Real month-over-month comparison: goals completed in the last 30 days
+// vs. the 30 days before that. Returns null if there's no dated completion
+// history yet to compare against (rather than faking a trend).
+function calcMonthlyCompletionDelta(goals) {
+  const day = 86400000;
+  const now = Date.now();
+  let thisMonth = 0, lastMonth = 0, anyDated = false;
+  goals.forEach(g => {
+    const date = getCompletionDate(g);
+    if (!date) return;
+    anyDated = true;
+    const daysAgo = (now - new Date(date).getTime()) / day;
+    if (daysAgo >= 0 && daysAgo < 30) thisMonth++;
+    else if (daysAgo >= 30 && daysAgo < 60) lastMonth++;
+  });
+  if (!anyDated) return null;
+  return { thisMonth, lastMonth, delta: thisMonth - lastMonth };
+}
+
+// Pace thresholds scale with how far through the goal's timeline you are.
+// Early on, a gap between expected and actual progress isn't alarming — there's
+// plenty of runway left to recover. As the deadline nears, the same size gap
+// becomes far more serious. So the "at risk" and "ahead" buffers both start
+// generous and tighten as the goal progresses.
+//
+// The tightening uses an ease-in curve (t²) rather than a straight line,
+// because most goals aren't logged in a perfectly smooth line — people batch
+// progress on weekends, take a few days off, etc. A linear buffer bottoms out
+// too early and starts flagging that normal lumpiness as "At Risk" well before
+// the deadline actually justifies it. Easing keeps the buffer close to its
+// starting value through most of the timeline, then tightens quickly only in
+// the final stretch, which is when a gap actually becomes urgent.
+const RISK_BUFFER_START = 20;  // % behind allowed near the start of the goal
+const RISK_BUFFER_END = 10;    // % behind allowed right before the deadline
+const AHEAD_BUFFER_START = 15; // % ahead needed to count as "Ahead" early on
+const AHEAD_BUFFER_END = 10;   // % ahead needed near the deadline
 
 function getPaceStatus(goal) {
   if (!goal.startDate || !goal.deadline || goal.progress >= 100) return null;
   const start = new Date(goal.startDate + "T00:00:00");
   const end = new Date(goal.deadline + "T00:00:00");
   const totalDays = (end - start) / 86400000;
+  if (totalDays <= 0) return null;
+
   const elapsed = (Date.now() - start) / 86400000;
-  const expected = Math.min(100, Math.round((elapsed / totalDays) * 100));
+  const elapsedFraction = Math.min(1, Math.max(0, elapsed / totalDays));
+  const expected = Math.min(100, Math.round(elapsedFraction * 100));
   const actual = goal.progress || 0;
-  if (actual >= expected + 10) return { label: "On Track", color: "var(--success)", icon: TrendingUp };
-  if (actual < expected - 15) return { label: "At Risk", color: "var(--danger)", icon: AlertTriangle };
+
+  // Ease-in curve: stays close to 0 for most of the timeline, then rises
+  // sharply as elapsedFraction approaches 1 (deadline is near).
+  const eased = elapsedFraction * elapsedFraction;
+  const riskBuffer = RISK_BUFFER_START - (RISK_BUFFER_START - RISK_BUFFER_END) * eased;
+  const aheadBuffer = AHEAD_BUFFER_START - (AHEAD_BUFFER_START - AHEAD_BUFFER_END) * eased;
+
+  if (actual >= expected + aheadBuffer) return { label: "Ahead", color: "var(--accent)", icon: Rocket };
+  if (actual < expected - riskBuffer) return { label: "At Risk", color: "var(--danger)", icon: AlertTriangle };
   return { label: "On Track", color: "var(--success)", icon: TrendingUp };
 }
 
-function MotivationalBanner({ name, goals, streak }) {
+// Defined quote pools per banner state. "normal" is a general-purpose pool
+// that gets blended into whichever specific state applies below, so every
+// category still gets some plain, always-true encouragement mixed in with
+// its more specific lines.
+const QUOTES = {
+  noGoals: [
+    "Every big win starts with one small decision to begin.",
+    "The best time to start was yesterday. The next best time is now.",
+    "You don't need a plan. You need a first step.",
+  ],
+  completedHistory: [
+    "You've done this before. You know you can do it again.",
+    "That achievement history isn't gone. Add a goal and keep building on it.",
+    "You've proven you can finish. What's next?",
+  ],
+  streak: [
+    "That streak isn't luck. That's you showing up.",
+    "This is what discipline looks like from the outside.",
+    "The streak is proof, not pressure. Keep going.",
+  ],
+  active: [
+    "You don't need a big day. You need today.",
+    "Progress is quiet. Keep making it anyway.",
+    "Nobody's watching but you. Keep going.",
+  ],
+  completed: [
+    "That's not nothing. Look at what you just did.",
+    "One down. You know exactly what it takes now.",
+    "Completed goals don't lie. You're capable of this.",
+  ],
+  normal: [
+    "Consistency beats intensity.",
+    "Small consistent actions lead to extraordinary results.",
+    "Showing up is the whole game.",
+  ],
+};
+
+// Rotates by calendar day rather than on every render/mount — same pick
+// holds steady all day, then changes tomorrow. Deterministic, no repeats
+// flickering on refresh, and every user on the same day sees the same one.
+function dayOfYearIndex() {
+  return Math.floor(
+    (Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000
+  );
+}
+
+function pickQuote(category) {
+  const pool = [...QUOTES[category], ...QUOTES.normal];
+  return pool[dayOfYearIndex() % pool.length];
+}
+
+// Message templates per condition. Each one is a function so it can plug in
+// the real, live numbers (streak count, completed count, active count) at
+// the moment it's chosen — nothing here is a rotating text variant, only
+// which condition gets shown rotates.
+const MESSAGES = {
+  noGoals: () => "Your journey starts with a single goal. Add one now.",
+  completedHistory: () => "You've completed goals before. Ready to start your next one?",
+  streak: ({ name, streak }) => `Keep crushing it, ${name}! ${streak.current}-day streak going strong.`,
+  completed: ({ completed }) => `You've completed ${completed} goal${completed > 1 ? 's' : ''}. Keep the momentum!`,
+  active: ({ activeCount }) => `You have ${activeCount} active goal${activeCount > 1 ? 's' : ''}. Stay focused!`,
+};
+
+// Every condition below is an equal citizen in one rotation pool — nothing
+// is a fixed special case. If a user has a streak AND completed goals AND
+// active goals right now, all three qualify and the banner rotates between
+// them day to day. If they have 0 goals right now but genuine completion
+// history (proven by unlocked achievements / achievement XP, which persist
+// in Firestore even after every goal is deleted), "no goals" and "you've
+// done this before" both qualify and alternate. Only a truly brand-new
+// user — 0 goals, 0 history — ends up with just one qualifying condition,
+// which is why that specific case looks "fixed": there's nothing else true
+// to rotate against yet.
+function MotivationalBanner({ name, goals, streak, hasCompletionHistory }) {
   const completed = goals.filter(g => g.progress >= 100).length;
   const total = goals.length;
-  let message = "Your journey starts with a single goal. Add one now.";
-  let sub = "Small consistent actions lead to extraordinary results.";
-  if (total > 0 && streak > 0) {
-    message = `Keep crushing it, ${name}! ${streak}-day streak going strong.`;
-    sub = "Small consistent actions lead to extraordinary results. You're doing great!";
-  } else if (completed > 0) {
-    message = `You've completed ${completed} goal${completed > 1 ? 's' : ''}. Keep the momentum!`;
-    sub = "Every completed goal is a step toward the best version of yourself.";
-  } else if (total > 0) {
-    message = `You have ${total} active goal${total > 1 ? 's' : ''}. Stay focused!`;
-    sub = "Consistency beats intensity. Keep showing up every day.";
+  const activeCount = total - completed;
+
+  const qualifying = [];
+  if (total === 0) {
+    qualifying.push("noGoals");
+    if (hasCompletionHistory) qualifying.push("completedHistory");
+  } else {
+    if (streak.current > 0) qualifying.push("streak");
+    if (completed > 0) qualifying.push("completed");
+    if (activeCount > 0) qualifying.push("active");
   }
+
+  const category = qualifying[dayOfYearIndex() % qualifying.length];
+  const message = MESSAGES[category]({ name, streak, completed, activeCount });
+  const sub = pickQuote(category);
+
   return (
     <div className={styles.banner}>
       <div className={styles.bannerIcon}><Sparkles size={22} color="var(--accent)" /></div>
@@ -122,6 +275,7 @@ export default function DashboardPage() {
   const completedGoals = goals.filter(g => g.progress >= 100);
   const completionRate = goals.length
     ? Math.round((completedGoals.length / goals.length) * 100) : 0;
+  const monthlyDelta = calcMonthlyCompletionDelta(goals);
 
   // Category filter
   const categoryFiltered = filter === "All" ? goals : goals.filter(g => g.category === filter);
@@ -158,10 +312,10 @@ export default function DashboardPage() {
             <div>
               <div className={styles.ccName}>{greeting}, {name}</div>
               <div className={styles.ccTitle}>
-                <span style={{ color: "var(--accent)", fontWeight: 700 }}>{levelInfo.title}</span>
-                <Zap size={13} color="var(--gold)" style={{ marginLeft: 4 }} />
+                <span className={styles.ccTitleAccent}>{levelInfo.title}</span>
+                <Zap size={13} color="var(--gold)" className={styles.ccTitleZap} />
               </div>
-              {streak > 0 && (
+              {streak.current > 0 && (
                 <div className={styles.ccStreak}>
                   <Flame size={13} color="var(--danger)" /> Keep crushing your goals!
                 </div>
@@ -171,10 +325,10 @@ export default function DashboardPage() {
           {/* XP bar */}
           <div className={styles.ccXP}>
             <div className={styles.ccXPRow}>
-              <span style={{ color: "var(--gold)", fontWeight: 700, fontSize: "1rem" }}>{totalXP.toLocaleString()}</span>
-              <span style={{ color: "var(--text-dim)", fontSize: "0.8rem" }}>/ {levelInfo.next?.xpRequired?.toLocaleString() || "MAX"} XP</span>
-              <span style={{ marginLeft: "auto", fontSize: "0.75rem", color: "var(--text-muted)" }}>Level {levelInfo.level}</span>
-              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>→ Level {levelInfo.level + 1}</span>
+              <span className={styles.ccXPValue}>{totalXP.toLocaleString()}</span>
+              <span className={styles.ccXPTotal}>/ {levelInfo.next?.xpRequired?.toLocaleString() || "MAX"} XP</span>
+              <span className={styles.ccXPLevelCurrent}>Level {levelInfo.level}</span>
+              <span className={styles.ccXPLevelNext}>→ Level {levelInfo.level + 1}</span>
             </div>
             <div className={styles.ccXPTrack}>
               <div className={styles.ccXPFill} style={{ width: `${levelInfo.pct}%` }} />
@@ -185,40 +339,45 @@ export default function DashboardPage() {
         {/* Stat cards */}
         <div className={styles.ccStats}>
           <div className={styles.ccStat}>
-            <div className={styles.ccStatIcon} style={{ background: "rgba(242,90,90,0.15)" }}>
+            <div className={`${styles.ccStatIcon} ${styles.ccStatIconDanger}`}>
               <Flame size={20} color="var(--danger)" />
             </div>
-            <div className={styles.ccStatVal}>{streak}</div>
+            <div className={styles.ccStatVal}>{streak.current}</div>
             <div className={styles.ccStatLabel}>Day Streak</div>
-            <div className={styles.ccStatSub} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <Flame size={11} color="var(--danger)" /> Best: {streak} days
+            <div className={styles.ccStatSub}>
+              <Flame size={11} color="var(--danger)" /> Best: {streak.best} days
             </div>
           </div>
           <div className={styles.ccStat}>
-            <div className={styles.ccStatIcon} style={{ background: "rgba(124,106,247,0.15)" }}>
+            <div className={`${styles.ccStatIcon} ${styles.ccStatIconAccent}`}>
               <Target size={20} color="var(--accent)" />
             </div>
             <div className={styles.ccStatVal}>{completedGoals.length}</div>
             <div className={styles.ccStatLabel}>Goals Completed</div>
-            <div className={styles.ccStatSub} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <div className={styles.ccStatSub}>
               <CheckCircle size={11} color="var(--success)" /> Keep it up!
             </div>
           </div>
           <div className={styles.ccStat}>
-            <div className={styles.ccStatIcon} style={{ background: "rgba(240,168,68,0.15)" }}>
+            <div className={`${styles.ccStatIcon} ${styles.ccStatIconGold}`}>
               <Trophy size={20} color="var(--gold)" />
             </div>
             <div className={styles.ccStatVal}>{unlockedAchievements.length}</div>
             <div className={styles.ccStatLabel}>Achievements</div>
-            <div className={styles.ccStatSub} style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Trophy size={11} color="var(--gold)" /> {ACHIEVEMENTS.length - unlockedAchievements.length} to unlock</div>
+            <div className={styles.ccStatSub}><Trophy size={11} color="var(--gold)" /> {ACHIEVEMENTS.length - unlockedAchievements.length} to unlock</div>
           </div>
           <div className={styles.ccStat}>
-            <div className={styles.ccStatIcon} style={{ background: "rgba(74,184,245,0.15)" }}>
+            <div className={`${styles.ccStatIcon} ${styles.ccStatIconBlue}`}>
               <TrendingUp size={20} color="var(--blue)" />
             </div>
             <div className={styles.ccStatVal}>{completionRate}%</div>
             <div className={styles.ccStatLabel}>Completion Rate</div>
-            <div className={styles.ccStatSub} style={{ display: 'flex', alignItems: 'center', gap: 4 }}><TrendingUp size={11} color="var(--blue)" /> +{completionRate > 0 ? completionRate : 0}% this month</div>
+            {monthlyDelta && (
+              <div className={styles.ccStatSub}>
+                <TrendingUp size={11} color="var(--blue)" />
+                {monthlyDelta.delta > 0 ? `+${monthlyDelta.delta}` : monthlyDelta.delta} this month
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -277,7 +436,7 @@ export default function DashboardPage() {
               <span className={styles.sectionTitle}>
                 {filter === "All" ? "Your Goals" : `${filter} Goals`}
               </span>
-              <button className="btn btn-primary" onClick={() => setShowAdd(true)} style={{ fontSize: "0.8rem", padding: "0.4rem 0.9rem" }}>
+              <button className={`btn btn-primary ${styles.newGoalBtn}`} onClick={() => setShowAdd(true)}>
                 <Plus size={14} /> New Goal
               </button>
             </div>
@@ -306,7 +465,7 @@ export default function DashboardPage() {
                   <SectionIcon category={filter} size={40} color={CATEGORY_COLORS[filter] || "var(--text-dim)"} />
                 </div>
                 <p>{goals.length === 0 ? "No goals yet. Your journey starts here." : `No goals match this filter.`}</p>
-                <button className="btn btn-primary" style={{ marginTop: "1rem" }} onClick={() => setShowAdd(true)}>
+                <button className={`btn btn-primary ${styles.addGoalBtn}`} onClick={() => setShowAdd(true)}>
                   Add a goal
                 </button>
               </div>
@@ -315,7 +474,7 @@ export default function DashboardPage() {
                 {filtered.map(goal => {
                   const pace = getPaceStatus(goal);
                   return (
-                    <div key={goal.id} style={{ position: "relative" }}>
+                    <div key={goal.id} className={styles.goalCardWrap}>
                       {pace && (
                         <div className={styles.paceBadge} style={{ color: pace.color, background: pace.color + "18", border: `1px solid ${pace.color}44` }}>
                           <pace.icon size={10} />
@@ -342,7 +501,12 @@ export default function DashboardPage() {
           </div>
 
           {/* ── Motivational Banner ── */}
-          <MotivationalBanner name={name} goals={goals} streak={streak} />
+          <MotivationalBanner
+            name={name}
+            goals={goals}
+            streak={streak}
+            hasCompletionHistory={unlockedAchievements.length > 0 || achievementXP > 0}
+          />
         </div>
 
         <div className={styles.rightPanel}>
@@ -367,8 +531,7 @@ export default function DashboardPage() {
                 );
               })}
             </div>
-            <button className="btn btn-ghost" onClick={() => navigate("/achievements")}
-              style={{ width: "100%", marginTop: "0.85rem", justifyContent: "center", fontSize: "0.82rem" }}>
+            <button className={`btn btn-ghost ${styles.seeAllBtn}`} onClick={() => navigate("/achievements")}>
               <Trophy size={14} /> See all · {unlockedAchievements.length}/{ACHIEVEMENTS.length} unlocked
             </button>
           </div>

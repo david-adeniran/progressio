@@ -4,6 +4,7 @@ import { sendEmailVerification } from 'firebase/auth'
 import { auth } from './lib/firebase'
 import { useAuth } from './context/AuthContext'
 import AuthPage from './pages/AuthPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 import DashboardPage from './pages/DashboardPage'
 import GoalDetailPage from './pages/GoalDetailPage'
 import GoalsPage from './pages/GoalsPage'
@@ -14,10 +15,6 @@ import SettingsPage from './pages/SettingsPage'
 import Layout from './components/Layout'
 
 function SplashScreen() {
-  // Apply theme before Layout mounts
-  const savedTheme = localStorage.getItem('theme') || 'dark'
-  document.documentElement.setAttribute('data-theme', savedTheme)
-
   return (
     <div style={{
       display: 'flex', flexDirection: 'column',
@@ -52,13 +49,12 @@ function SplashScreen() {
       {/* Dancing logo */}
       <div style={{
         width: 72, height: 72, borderRadius: 20,
-        background: 'linear-gradient(135deg, #7c6af7, #3ecf8e)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontFamily: 'var(--font-display)', fontWeight: 800,
         fontSize: '2rem', color: '#fff',
         animation: 'dance 1.2s ease-in-out infinite, glow 1.2s ease-in-out infinite',
       }}>
-        P
+        <img src="https://res.cloudinary.com/f3z9dqhr/image/upload/f_auto/q_auto/Gemini_Generated_Image_s9gwums9gwums9gw-removebg-preview_cfktxv.png" alt="Progressio" style={{ width: '70%', height: '70%', objectFit: 'cover' }} />
       </div>
 
       {/* Wordmark */}
@@ -145,6 +141,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/auth" element={user ? <Navigate to="/" replace /> : <AuthPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
         <Route index element={<DashboardPage />} />
         <Route path="goal/:goalId" element={<GoalDetailPage />} />

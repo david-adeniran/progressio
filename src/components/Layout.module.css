@@ -12,7 +12,7 @@
 
 /* ── Logo ── */
 .sidebarLogo {
-  display: flex; align-items: center; gap: 9px;
+  display: flex; align-items: center; gap: 3px;
   padding: 1.1rem 1rem; border-bottom: 1px solid var(--border);
   text-decoration: none; flex-shrink: 0;
 }

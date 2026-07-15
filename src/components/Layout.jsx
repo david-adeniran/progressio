@@ -148,7 +148,7 @@ export default function Layout() {
       <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ""}`}>
         {/* Logo */}
         <Link to="/" className={styles.sidebarLogo}>
-          <img src="/logo.png" alt="Progressio" className={styles.logoImg}
+          <img src="https://res.cloudinary.com/f3z9dqhr/image/upload/f_auto/q_auto/Gemini_Generated_Image_s9gwums9gwums9gw-removebg-preview_cfktxv.png" alt="Progressio" className={styles.logoImg}
             onError={e => { e.target.style.display='none'; e.target.nextSibling.style.display='flex'; }} />
           <div className={styles.logoIcon} style={{ display: 'none' }}>P</div>
           <span className={styles.logoText}>Progressio</span>
@@ -212,7 +212,7 @@ export default function Layout() {
           <div style={{ width: 28 }} />
         </div>
         <div className={styles.content}>
-          <Outlet />
+            <Outlet context={{ dark, setDark }} />
         </div>
       </div>
     </div>

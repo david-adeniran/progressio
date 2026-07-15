@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useOutletContext } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useAvatar } from '../hooks/useAvatar'
 import { AVATARS } from '../lib/avatars'
@@ -50,7 +50,7 @@ export default function SettingsPage() {
   const { avatarId, saveAvatar } = useAvatar(user?.uid)
   const navigate = useNavigate()
 
-  const [dark, setDark] = useState(() => localStorage.getItem('theme') !== 'light')
+  const { dark, setDark } = useOutletContext()
   const [displayName, setDisplayName] = useState(user?.displayName || '')
   const [nameSuccess, setNameSuccess] = useState('')
   const [nameError, setNameError] = useState('')
@@ -66,21 +66,10 @@ export default function SettingsPage() {
   const [showNewPw, setShowNewPw] = useState(false)
   const pwChecks = useMemo(() => RULES.map(r => ({ ...r, passed: r.test(newPw) })), [newPw])
   const pwAllPassed = pwChecks.every(c => c.passed)
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light')
-    localStorage.setItem('theme', dark ? 'dark' : 'light')
-  }, [dark])
 
   useEffect(() => {
     if (user?.displayName) setDisplayName(user.displayName)
   }, [user?.displayName])
-
-  function toggleTheme() {
-    const next = !dark
-    setDark(next)
-    document.documentElement.setAttribute('data-theme', next ? 'dark' : 'light')
-    localStorage.setItem('theme', next ? 'dark' : 'light')
-  }
 
   async function handleSignOut() {
     setSigningOut(true)
@@ -186,7 +175,7 @@ export default function SettingsPage() {
           label="Theme"
           sub={dark ? 'Dark' : 'Light'}
           right={
-            <button className={`${styles.toggle} ${dark ? styles.toggleOn : ''}`} onClick={toggleTheme}>
+            <button className={`${styles.toggle} ${dark ? styles.toggleOn : ''}`} onClick={() => setDark(v => !v)}>
               <div className={styles.toggleKnob} />
             </button>
           }

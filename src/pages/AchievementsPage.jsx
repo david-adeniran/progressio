@@ -201,19 +201,19 @@ export default function AchievementsPage() {
                     <div className={styles.badgeIcon}>
                       {isUnlocked
                         ? <Icon size={26} color={meta.color} strokeWidth={1.8} />
-                        : <Lock size={20} color="var(--text-dim)" />
+                        : <Lock size={20} color="var(--text-muted)" />
                       }
                     </div>
 
                     <span className={styles.tierTag} style={{
-                      color: isUnlocked ? meta.color : 'var(--text-dim)',
+                      color: isUnlocked ? meta.color : 'var(--text-muted)',
                       borderColor: isUnlocked ? meta.color + '44' : 'var(--border)',
                       background: isUnlocked ? meta.color + '14' : 'transparent',
                     }}>
                       {meta.label}
                     </span>
 
-                    <h3 className={styles.badgeName} style={{ color: isUnlocked ? 'var(--text)' : 'var(--text-dim)' }}>
+                    <h3 className={styles.badgeName} style={{ color: isUnlocked ? 'var(--text)' : 'var(--text-muted)' }}>
                       {isHidden ? '???' : a.label}
                     </h3>
                     <p className={styles.badgeDesc}>

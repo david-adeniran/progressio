@@ -155,7 +155,7 @@
   background: var(--surface);
   border: 1px solid var(--border);
   position: relative; cursor: default;
-  opacity: 0.45;
+  opacity: 0.82;
   transition: opacity 0.2s, transform 0.2s, border-color 0.2s, box-shadow 0.2s;
 }
 .badgeUnlocked {
