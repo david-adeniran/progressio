@@ -330,9 +330,21 @@ export default function GoalsPage() {
               : 'Manage and track all your goals in one place.'}
           </p>
         </div>
-        <button className="btn btn-primary" onClick={() => setShowAdd(true)}>
-          <Plus size={15} /> New Goal
-        </button>
+        <div className={styles.headerActions}>
+          <select
+            className={`${styles.sortSelect} ${styles.sortSelectMobile}`}
+            value={sort}
+            onChange={e => setSort(e.target.value)}
+          >
+            <option value="newest">Newest</option>
+            <option value="progress-high">Most progress</option>
+            <option value="progress-low">Least progress</option>
+            <option value="name">A → Z</option>
+          </select>
+          <button className="btn btn-primary" onClick={() => setShowAdd(true)}>
+            <Plus size={15} /> New Goal
+          </button>
+        </div>
       </div>
 
       {/* Status tabs */}
@@ -356,7 +368,7 @@ export default function GoalsPage() {
           </button>
         ))}
 
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
+        <div className={styles.sortWrapDesktop} style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
           <select className={styles.sortSelect} value={sort} onChange={e => setSort(e.target.value)}>
             <option value="newest">Newest</option>
             <option value="progress-high">Most progress</option>

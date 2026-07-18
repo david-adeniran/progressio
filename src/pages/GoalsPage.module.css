@@ -11,6 +11,9 @@
 }
 .sub { font-size: 0.78rem; color: var(--text-dim); margin-top: 3px; font-weight: 400; }
 
+.headerActions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.sortSelectMobile { display: none; }
+
 /* ── Tabs ── */
 .tabs {
   display: flex; align-items: center; gap: 0;
@@ -64,6 +67,7 @@
 /* ── Goals List ── */
 .goalsList {
   display: flex; flex-direction: column;
+  min-width: 0;
   background: var(--surface);
   border: 1px solid var(--border);
 }
@@ -158,6 +162,7 @@
   border: 1px solid var(--border);
   padding: 1.25rem;
   display: flex; flex-direction: column; gap: 1rem;
+  min-width: 0;
   position: sticky; top: 1.5rem;
 }
 .detailHeader { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
@@ -249,4 +254,57 @@
 @media (max-width: 900px) {
   .withPanel { grid-template-columns: 1fr; }
   .detailPanel { position: static; }
+}
+
+@media (max-width: 640px) {
+  .goalRow { padding: 0.75rem 1rem; gap: 10px; }
+  .goalRowIcon { width: 32px; height: 32px; }
+  .detailPanel { padding: 1rem; }
+  .detailMeta { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .tabs {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+  }
+  .tab {
+    justify-content: center;
+    padding: 0.5rem 0.3rem;
+    font-size: 0.66rem;
+    gap: 3px;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.15;
+  }
+  .tabCount {
+    min-width: 14px;
+    height: 13px;
+    padding: 0 3px;
+    font-size: 0.55rem;
+  }
+  .sortWrapDesktop { display: none !important; }
+  .headerActions { width: 100%; justify-content: space-between; }
+  .headerActions :global(.btn) {
+    order: 1;
+    padding: 0.35rem 0.7rem;
+    font-size: 0.75rem;
+  }
+  .sortSelectMobile {
+    display: inline-flex; width: auto;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 0.4rem 0.5rem;
+    font-size: 0.7rem; color: var(--text-muted);
+    margin-bottom: 0;
+    order: 2;
+  }
+}
+
+@media (max-width: 480px) {
+  .title { font-size: 1.25rem; }
+  .goalRowTop { flex-wrap: wrap; row-gap: 4px; }
+  .goalRowRight { flex-wrap: wrap; }
+  .goalRowMeta { flex-wrap: wrap; row-gap: 4px; }
+  .tab { padding: 0.5rem 0.25rem; font-size: 0.64rem; }
 }

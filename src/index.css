@@ -49,12 +49,14 @@
   --danger-dim: #fde8e8;
 }
 
+html, body, #root { height: 100%; }
+
 body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-body);
   line-height: 1.6;
-  min-height: 100vh;
+  overflow: hidden;
   position: relative;
 }
 

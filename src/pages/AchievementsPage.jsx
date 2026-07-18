@@ -33,7 +33,7 @@ export default function AchievementsPage() {
   const { goals, getUnlockedAchievements, resetAchievements, persistedAchievements } = useGoals(user?.uid)
   const totalXP = calcTotalXP(goals)
   const { level } = getLevelInfo(totalXP)
-  const [filter, setFilter] = useState('all')
+  const [filter, setFilter] = useState('unlocked')
   const [showResetConfirm, setShowResetConfirm] = useState(false)
   const [resetting, setResetting] = useState(false)
 
@@ -247,7 +247,7 @@ export default function AchievementsPage() {
                   <div key={node.level} style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
                     <div className={styles.roadmapNode}>
                       <div className={`${styles.roadmapDot} ${isActive ? styles.roadmapDotActive : ''} ${isDone ? styles.roadmapDotDone : ''}`}>
-                        {isDone ? '✓' : node.label}
+                        {isDone ? '✓' : node.level}
                       </div>
                       <span className={`${styles.roadmapLabel} ${isActive ? styles.roadmapLabelActive : ''}`}>
                         {node.desc}

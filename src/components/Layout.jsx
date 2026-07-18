@@ -114,6 +114,23 @@ export default function Layout() {
   }, [confettiQueue, activeConfetti])
 
   useEffect(() => {
+    function updateAppHeight() {
+      const vv = window.visualViewport;
+      const height = vv ? vv.height : window.innerHeight;
+      document.documentElement.style.setProperty("--app-height", `${height}px`);
+    }
+    updateAppHeight();
+    window.visualViewport?.addEventListener("resize", updateAppHeight);
+    window.visualViewport?.addEventListener("scroll", updateAppHeight);
+    window.addEventListener("resize", updateAppHeight);
+    return () => {
+      window.visualViewport?.removeEventListener("resize", updateAppHeight);
+      window.visualViewport?.removeEventListener("scroll", updateAppHeight);
+      window.removeEventListener("resize", updateAppHeight);
+    };
+  }, []);
+
+  useEffect(() => {
     document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
     localStorage.setItem("theme", dark ? "dark" : "light");
   }, [dark]);
@@ -173,6 +190,14 @@ export default function Layout() {
           <div className={styles.logoIcon} style={{ display: 'none' }}>P</div>
           <span className={styles.logoText}>Progressio</span>
         </Link>
+
+        <button
+          className={styles.sidebarClose}
+          onClick={() => setSidebarOpen(false)}
+          aria-label="Close menu"
+        >
+          <X size={18} />
+        </button>
 
         {/* Nav */}
         <nav className={styles.nav}>

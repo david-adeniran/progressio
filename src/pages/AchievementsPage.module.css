@@ -1,4 +1,4 @@
-.page { padding-bottom: 5rem; }
+.page { padding-bottom: 5rem; overflow-x: hidden; }
 
 /* ── Header ── */
 .header {
@@ -94,10 +94,12 @@
   font-family: var(--font-display); font-size: 1.35rem;
   font-weight: 800; color: var(--text);
   letter-spacing: -0.03em; line-height: 1.1;
+  overflow-wrap: break-word; word-break: break-word;
 }
 .heroDesc {
   font-size: 0.8rem; color: var(--text-muted);
   margin-top: 5px; line-height: 1.6;
+  overflow-wrap: break-word; word-break: break-word;
 }
 .heroXP {
   display: inline-flex; align-items: center; gap: 4px;
@@ -115,8 +117,8 @@
   margin-bottom: 1.25rem; flex-wrap: wrap;
 }
 .filterTab {
-  padding: 0.3rem 0.8rem; border-radius: 6px;
-  font-size: 0.75rem; font-weight: 500;
+  padding: 0.4rem 0.95rem; border-radius: 6px;
+  font-size: 0.8rem; font-weight: 500;
   background: transparent;
   border: 1px solid var(--border);
   color: var(--text-muted);
@@ -196,10 +198,12 @@
 .badgeName {
   font-size: 0.75rem; font-weight: 700;
   color: var(--text-muted); line-height: 1.25;
+  overflow-wrap: break-word; word-break: break-word;
 }
 .badgeDesc {
   font-size: 0.63rem; color: var(--text-dim);
   line-height: 1.45;
+  overflow-wrap: break-word; word-break: break-word;
 }
 .badgeCheck {
   font-size: 0.58rem; font-weight: 700;
@@ -223,6 +227,7 @@
 .roadmapTrack {
   display: flex; align-items: center;
   overflow-x: auto; padding-bottom: 0.5rem;
+  -webkit-overflow-scrolling: touch;
 }
 .roadmapNode {
   display: flex; flex-direction: column;
@@ -320,6 +325,41 @@
   .layout { grid-template-columns: 1fr; }
   .rightPanel { position: static; }
 }
+@media (max-width: 600px) {
+  .hero { padding: 1.1rem; }
+  .heroBody { gap: 1rem; }
+  .heroHex { width: 60px; height: 60px; border-radius: 14px; }
+  .heroName { font-size: 1.15rem; }
+  .roadmap { padding: 1.1rem 1rem; }
+  .panel { padding: 0.9rem 1rem; }
+  .topProgress { padding: 0.85rem 1rem; }
+
+  .filters {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .filterTab {
+    padding: 0.55rem 0.5rem; font-size: 0.72rem;
+    text-align: center;
+  }
+}
 @media (max-width: 500px) {
   .grid { grid-template-columns: repeat(2, 1fr); }
+  .title { font-size: 1.5rem; }
+  .header { gap: 0.75rem; }
+}
+@media (max-width: 420px) {
+  .grid { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .badge { padding: 0.9rem 0.5rem; }
+  .topProgress {
+    flex-direction: column; align-items: stretch; gap: 0.6rem;
+  }
+  .topProgressLabel, .topProgressPct { white-space: normal; text-align: center; }
+  .heroBody { flex-direction: column; align-items: flex-start; }
+
+  .roadmap { padding: 1rem 0.85rem; }
+  .roadmapNode { min-width: 72px; gap: 4px; }
+  .roadmapDot { width: 36px; height: 36px; font-size: 0.6rem; border-width: 1px; }
+  .roadmapLabel { font-size: 0.56rem; }
+  .roadmapLine { min-width: 10px; }
 }

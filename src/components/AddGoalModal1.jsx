@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react'
-import { createPortal } from 'react-dom'
 import { Calendar, X, ChevronRight, Target, TrendingUp, Wallet, Dumbbell, BookOpen, Briefcase, Heart, Plane, Leaf, Zap, Check } from 'lucide-react'
 import styles from './AddGoalModal.module.css'
 
@@ -120,13 +119,6 @@ export const UNIT_CATEGORIES = [
   { label: 'Custom', units: [] },
 ]
 
-// Unique identifier for a unit — currencies share display symbols (multiple
-// currencies use "kr", "Fr", "$", etc.) but always have a unique `code`.
-// Non-currency units don't have a `code`, but their `symbol` is already unique.
-function getUnitKey(u) {
-  return u.code || u.symbol
-}
-
 function addMonths(dateStr, n) {
   const d = new Date(dateStr + 'T00:00:00')
   d.setMonth(d.getMonth() + n)
@@ -159,7 +151,7 @@ export default function AddGoalModal({ onClose, onAdd, categories }) {
   const [startDate, setStartDate] = useState(todayStr)
   const [endDate, setEndDate] = useState('')
   const [unitCategory, setUnitCategory] = useState(UNIT_CATEGORIES[0].label)
-  const [selectedUnit, setSelectedUnit] = useState(getUnitKey(UNIT_CATEGORIES[0].units[0]))
+  const [selectedUnit, setSelectedUnit] = useState(UNIT_CATEGORIES[0].units[0].symbol)
   const [customUnit, setCustomUnit] = useState('')
   const titleRef = useRef(null)
 
@@ -174,8 +166,7 @@ export default function AddGoalModal({ onClose, onAdd, categories }) {
   const currentCat = UNIT_CATEGORIES.find(c => c.label === unitCategory) ?? null
   const isCustomUnitCat = unitCategory === 'Custom'
   const currentCatHasUnits = !isCustomUnitCat && currentCat && currentCat.units.length > 0
-  const selectedUnitObj = currentCat?.units.find(u => getUnitKey(u) === selectedUnit)
-  const displayUnit = isCustomUnitCat ? customUnit : (selectedUnitObj?.symbol ?? selectedUnit)
+  const displayUnit = isCustomUnitCat ? customUnit : selectedUnit
   const targetAmount = parseAmount(targetAmountRaw)
   const formattedTarget = formatAmount(targetAmountRaw)
 
@@ -195,7 +186,7 @@ export default function AddGoalModal({ onClose, onAdd, categories }) {
   function handleUnitCategoryChange(catLabel) {
     const cat = UNIT_CATEGORIES.find(c => c.label === catLabel)
     setUnitCategory(catLabel)
-    setSelectedUnit(cat?.units[0] ? getUnitKey(cat.units[0]) : '')
+    setSelectedUnit(cat?.units[0]?.symbol || '')
     setCustomUnit('')
   }
 
@@ -242,7 +233,7 @@ export default function AddGoalModal({ onClose, onAdd, categories }) {
 
   // ── Done state ──
   if (done) {
-    return createPortal(
+    return (
       <div className={styles.overlay}>
         <div className={styles.modal} style={{ borderLeftColor: catColor }}>
           <div className={styles.doneState}>
@@ -253,12 +244,11 @@ export default function AddGoalModal({ onClose, onAdd, categories }) {
             <div className={styles.doneSub}>{title}</div>
           </div>
         </div>
-      </div>,
-      document.body
+      </div>
     )
   }
 
-  return createPortal(
+  return (
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={e => e.stopPropagation()} style={{ borderLeftColor: catColor }}>
 
@@ -315,11 +305,12 @@ export default function AddGoalModal({ onClose, onAdd, categories }) {
                   </div>
                   <input
                     ref={titleRef}
-                    className={`${styles.input} ${styles.titleInput}`}
+                    className={styles.input}
                     style={titleValid ? { borderColor: catColor } : {}}
                     value={title}
                     onChange={handleTitleChange}
                     placeholder={CATEGORY_PLACEHOLDERS[category]}
+                    autoFocus
                     maxLength={TITLE_MAX}
                   />
 
@@ -419,7 +410,7 @@ export default function AddGoalModal({ onClose, onAdd, categories }) {
                         <div className={styles.field}>
                           <label className={styles.label}>Unit *</label>
                           <select className={styles.select} value={selectedUnit} onChange={e => setSelectedUnit(e.target.value)}>
-                            {currentCat.units.map(u => <option key={getUnitKey(u)} value={getUnitKey(u)}>{u.label}</option>)}
+                            {currentCat.units.map(u => <option key={u.symbol} value={u.symbol}>{u.label}</option>)}
                           </select>
                         </div>
                       )}
@@ -571,7 +562,6 @@ export default function AddGoalModal({ onClose, onAdd, categories }) {
           </div>
         </form>
       </div>
-    </div>,
-    document.body
+    </div>
   )
 }
