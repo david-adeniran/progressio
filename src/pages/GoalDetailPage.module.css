@@ -1,4 +1,4 @@
-.page { max-width: 640px; }
+.page { max-width: 640px; width: 100%; overflow-x: hidden; }
 
 .loading { color: var(--text-muted); font-size: 0.9rem; padding: 2rem 0; }
 
@@ -137,6 +137,32 @@
 }
 
 .logForm { display: flex; flex-direction: column; gap: 12px; margin-top: 1.1rem; }
+
+/* Native <input type="date"> can demand more intrinsic width than its
+   container (especially iOS Safari's segmented day/month/year control),
+   and will overflow rather than shrink unless explicitly capped here. */
+/* Native <input type="date"> can demand more intrinsic width than its
+   container (especially iOS Safari's segmented day/month/year control),
+   and will overflow rather than shrink — iOS ignores width/padding/font-size
+   set directly on the input for this control. A wrapper with overflow:hidden
+   is the one thing the browser can't opt out of. */
+.dateInputWrap {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+.dateInputWrap .dateInput {
+  border: none;
+  background: transparent;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 0.55rem 0.6rem;
+  font-size: 0.9rem;
+}
 
 .sectionTitle {
   font-family: var(--font-display);
@@ -355,8 +381,7 @@
   border-radius: 2px;
   padding: 0.95rem 1.75rem;
   text-align: center;
-  min-width: 260px;
-  max-width: 90vw;
+  width: min(260px, 90vw);
   animation: celebrationIn 0.3s ease;
 }
 .celebrationMsg {

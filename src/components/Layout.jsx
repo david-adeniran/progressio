@@ -32,6 +32,7 @@ export default function Layout() {
   const [dark, setDark] = useState(() => localStorage.getItem("theme") !== "light");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userPopoverOpen, setUserPopoverOpen] = useState(false);
+  const contentRef = useRef(null);
 
   const [confettiQueue, setConfettiQueue] = useState([])
   const [activeConfetti, setActiveConfetti] = useState(null)
@@ -114,28 +115,28 @@ export default function Layout() {
   }, [confettiQueue, activeConfetti])
 
   useEffect(() => {
-    function updateAppHeight() {
-      const vv = window.visualViewport;
-      const height = vv ? vv.height : window.innerHeight;
-      document.documentElement.style.setProperty("--app-height", `${height}px`);
-    }
-    updateAppHeight();
-    window.visualViewport?.addEventListener("resize", updateAppHeight);
-    window.visualViewport?.addEventListener("scroll", updateAppHeight);
-    window.addEventListener("resize", updateAppHeight);
-    return () => {
-      window.visualViewport?.removeEventListener("resize", updateAppHeight);
-      window.visualViewport?.removeEventListener("scroll", updateAppHeight);
-      window.removeEventListener("resize", updateAppHeight);
-    };
-  }, []);
-
-  useEffect(() => {
     document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
     localStorage.setItem("theme", dark ? "dark" : "light");
   }, [dark]);
 
   useEffect(() => { setSidebarOpen(false); setUserPopoverOpen(false); }, [location.pathname]);
+
+  // iOS Safari sometimes fails to repaint .content after the on-screen
+  // keyboard resizes the visible viewport, leaving stale/blank areas until
+  // the user manually scrolls. Nudging the scroll position by a pixel
+  // forces WebKit to repaint immediately instead.
+  useEffect(() => {
+    if (!window.visualViewport) return;
+    function forceRepaint() {
+      const el = contentRef.current;
+      if (!el) return;
+      const y = el.scrollTop;
+      el.scrollTop = y + 1;
+      el.scrollTop = y;
+    }
+    window.visualViewport.addEventListener('resize', forceRepaint);
+    return () => window.visualViewport.removeEventListener('resize', forceRepaint);
+  }, []);
 
   // Close popover on outside click
   useEffect(() => {
@@ -256,7 +257,7 @@ export default function Layout() {
           <span className={styles.topbarTitle}>{currentPage}</span>
           <div style={{ width: 28 }} />
         </div>
-        <div className={styles.content}>
+        <div className={styles.content} ref={contentRef}>
             <Outlet context={{ dark, setDark }} />
         </div>
       </div>

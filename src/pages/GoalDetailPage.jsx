@@ -204,7 +204,7 @@ export default function GoalDetailPage() {
 
   // Check if logging is allowed based on frequency and existing logs
   function canLogToday() {
-    if (!frequency || !entryDate) return true
+    if (!frequency || frequency === 'Flexible' || !entryDate) return true
     const existing = (goal.logs || []).filter(l => {
       const ld = new Date(l.date)
       const ed = new Date(entryDate + 'T12:00:00')
@@ -403,11 +403,15 @@ export default function GoalDetailPage() {
               <div className="form-row">
                 <div className="form-group" style={{ marginBottom: 0 }}>
                   <label>Start date</label>
-                  <input type="date" value={editStartDate} onChange={e => setEditStartDate(e.target.value)} />
+                  <div className={styles.dateInputWrap}>
+                    <input type="date" className={styles.dateInput} value={editStartDate} onChange={e => setEditStartDate(e.target.value)} />
+                  </div>
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
                   <label>End date</label>
-                  <input type="date" value={editEndDate} min={editStartDate} onChange={e => setEditEndDate(e.target.value)} />
+                  <div className={styles.dateInputWrap}>
+                    <input type="date" className={styles.dateInput} value={editEndDate} min={editStartDate} onChange={e => setEditEndDate(e.target.value)} />
+                  </div>
                 </div>
               </div>
             )}
@@ -543,12 +547,15 @@ export default function GoalDetailPage() {
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
                   <label>Date</label>
-                  <input
-                    type="date"
-                    value={entryDate}
-                    onChange={e => setEntryDate(e.target.value)}
-                    disabled={alreadyLoggedThisPeriod}
-                  />
+                  <div className={styles.dateInputWrap}>
+                    <input
+                      type="date"
+                      className={styles.dateInput}
+                      value={entryDate}
+                      onChange={e => setEntryDate(e.target.value)}
+                      disabled={alreadyLoggedThisPeriod}
+                    />
+                  </div>
                 </div>
               </div>
               <div className={styles.calcPreview}>

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { Calendar, X, ChevronRight, Target, TrendingUp, Wallet, Dumbbell, BookOpen, Briefcase, Heart, Plane, Leaf, Zap, Check } from 'lucide-react'
 import styles from './AddGoalModal.module.css'
 
-const FREQUENCIES = ['Daily', 'Weekly', 'Monthly']
+const FREQUENCIES = ['Daily', 'Weekly', 'Monthly', 'Flexible']
 const TITLE_MAX = 60
 
 const CATEGORY_COLORS = {
