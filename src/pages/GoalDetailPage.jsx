@@ -15,6 +15,15 @@ const CATEGORY_COLORS = {
 function fmt(n) {
   return Number(n).toLocaleString('en-NG', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
 }
+// Live comma-formatting for the amount input as the user types — keeps the
+// underlying value a clean number string, only the displayed text gets commas
+function formatAmountInput(raw) {
+  if (!raw) return ''
+  const cleaned = raw.replace(/[^\d.]/g, '')
+  const parts = cleaned.split('.')
+  const intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  return parts.length > 1 ? `${intPart}.${parts[1]}` : intPart
+}
 function formatDate(iso) {
   return new Date(iso).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
 }
@@ -344,7 +353,7 @@ export default function GoalDetailPage() {
             <>
               <div className="form-group">
                 <label>Target amount</label>
-                <input type="number" value={editTarget} onChange={e => setEditTarget(e.target.value)} />
+                <input type="text" inputMode="decimal" value={formatAmountInput(amount)} onChange={e => setAmount(e.target.value.replace(/,/g, ''))} />
               </div>
               <div className="form-group">
                 <label>Unit category</label>
@@ -537,10 +546,10 @@ export default function GoalDetailPage() {
                 <div className="form-group" style={{ marginBottom: 0 }}>
                   <label>Amount {unit ? `(${unit})` : ''}</label>
                   <input
-                    type="number" min="0.01" step="any"
-                    value={amount}
-                    onChange={e => setAmount(e.target.value)}
-                    placeholder="e.g. 2000"
+                    type="text" inputMode="decimal"
+                    value={formatAmountInput(amount)}
+                    onChange={e => setAmount(e.target.value.replace(/,/g, ''))}
+                    placeholder="e.g. 2,000"
                     required
                     disabled={alreadyLoggedThisPeriod}
                   />
