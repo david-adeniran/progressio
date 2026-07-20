@@ -32,7 +32,6 @@ export default function Layout() {
   const [dark, setDark] = useState(() => localStorage.getItem("theme") !== "light");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userPopoverOpen, setUserPopoverOpen] = useState(false);
-  const contentRef = useRef(null);
 
   const [confettiQueue, setConfettiQueue] = useState([])
   const [activeConfetti, setActiveConfetti] = useState(null)
@@ -117,26 +116,42 @@ export default function Layout() {
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
     localStorage.setItem("theme", dark ? "dark" : "light");
+
+    // Keep Safari's own toolbar/address-bar chrome tinted to match the
+    // current theme instead of defaulting to white.
+    let meta = document.querySelector('meta[name="theme-color"]');
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.name = "theme-color";
+      document.head.appendChild(meta);
+    }
+    meta.content = dark ? "#0a0a0a" : "#f7f7f5";
   }, [dark]);
 
   useEffect(() => { setSidebarOpen(false); setUserPopoverOpen(false); }, [location.pathname]);
 
-  // iOS Safari sometimes fails to repaint .content after the on-screen
-  // keyboard resizes the visible viewport, leaving stale/blank areas until
-  // the user manually scrolls. Nudging the scroll position by a pixel
-  // forces WebKit to repaint immediately instead.
+  // Lock background scroll while the mobile sidebar (full-screen drawer)
+  // is open. Plain overflow:hidden on body is unreliable on iOS Safari,
+  // so we pin body in place and restore the exact scroll position on close.
   useEffect(() => {
-    if (!window.visualViewport) return;
-    function forceRepaint() {
-      const el = contentRef.current;
-      if (!el) return;
-      const y = el.scrollTop;
-      el.scrollTop = y + 1;
-      el.scrollTop = y;
-    }
-    window.visualViewport.addEventListener('resize', forceRepaint);
-    return () => window.visualViewport.removeEventListener('resize', forceRepaint);
-  }, []);
+    if (!sidebarOpen) return;
+    const scrollY = window.scrollY;
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = "100%";
+    return () => {
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+      // Deferring to the next frame (after the unpin has actually painted)
+      // and forcing instant behavior reduces — but can't fully guarantee —
+      // Safari re-showing its toolbar chrome on this jump. That toggle is
+      // a browser-level heuristic, not something CSS/JS can fully control.
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: scrollY, behavior: "instant" });
+      });
+    };
+  }, [sidebarOpen]);
 
   // Close popover on outside click
   useEffect(() => {
@@ -257,7 +272,7 @@ export default function Layout() {
           <span className={styles.topbarTitle}>{currentPage}</span>
           <div style={{ width: 28 }} />
         </div>
-        <div className={styles.content} ref={contentRef}>
+        <div className={styles.content}>
             <Outlet context={{ dark, setDark }} />
         </div>
       </div>
